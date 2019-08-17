@@ -1,0 +1,51 @@
+<p>{{.studentContent}}<span>{{.studentId}}</span></p>
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>calca程序运行状态界面</title>
+</head>
+<body>
+
+<div id="header" style="background-color:#7E735F;color:white;"> <!-- "background-color:#0xE0EbF5;color:0x375EAB;"  --> 
+<h4>Contribute:&nbsp <a href="https://github.com/NickQian/calca"> github链接 </a> </h4>
+</div>
+
+ &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp 
+<span>数据更新： {{.calDate}} </span>
+	
+<p>-------------------------------------------------------</p>
+<table border="1">
+    <tr>
+        <td>bi: {{.res.bi}}  &nbsp &nbsp </td>   
+		<td>ti: {{.res.ti}}  &nbsp &nbsp  </td>   
+		<td>Mix_Casino_Weigher:  {{.res.mixcw_c}} - {{.res.mixcw_w}} </td>   
+    </tr>
+</table>
+<p>-------------------------------------------------------</p>
+	
+<table border="1">
+    <tr>
+        <td>Scan Res: {{.res.sug[0]}}，{{.res.sug[1]}}，{{.res.sug[2]}} </td>   
+    </tr>
+	<tr>
+        <td>{{.res.sug[3]}}, {{.res.sug[4]}}, {{.res.sug[5]}}, {{.res.sug[6]}}, {{.res.sug[7]}}, {{.res.sug[8]}} </td>   
+    </tr>
+</table>
+
+<p>-------------------------------------------------------</p>
+	
+<p>AutoTradeAccu: {{.autoAccu}}   &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp |&nbsp &nbsp &nbsp &nbsp since2019.1.30 </p>
+&nbsp &nbsp &nbsp  <br> <hr> <br>
+	
+<a href="http://118.24.165.139:9090/about">About</a> 
+&nbsp &nbsp 
+<a href="http://118.24.165.139:9090/feedback">反馈</a>
+
+<div id="footer" style="background-color:#7E735F;color:white; clear:both;text-align:center; padding: 10px">
+版权 © calca </div>
+
+</body>
+</html>
+

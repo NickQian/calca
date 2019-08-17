@@ -1,0 +1,9 @@
+
+This is to build a Website to publish the current calculation result.
+
+1) The "calca" & "simtrade" runs every day morning and issue the result;
+2) "webca" only run as web server. Get and report the 2 json results.
+
+
+
+2019.1.15
