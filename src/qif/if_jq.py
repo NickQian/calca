@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding:utf-8 -*-
+
 """
 # JoinQuant(聚宽)的JQData的python接口.   www.joinquant.com/data    
 #  ----
@@ -14,11 +16,13 @@ import pandas as pd
 from sqlalchemy import Integer, Column, create_engine, ForeignKey
 from sqlalchemy.orm import relationship, joinedload, subqueryload, Session
 
-def auth(username,password):
+
+def Login_JQ(username,password):
     return jq.auth(username, password)
     
-def getCurPE():    
-    pdf = getMarketYesterday()
+
+def getPE(day):    
+    pdf = getMarket(day)
     pe_sha = pdf[0:1]['pe_average'][0]               # 上海A股
     pe_sh  = pdf[2:3]['pe_average'][2]               # 上海市场
     pe_szm = pdf[4:5]['pe_average'][4]               # 深主板
@@ -27,28 +31,28 @@ def getCurPE():
     return  { 'pe_sh':pe_sh, 'pe_sz':pe_sz, 'pe_gem':pe_gem}
     
     
-def getCurVol():   # 单位：亿人民币
-    pdf = getMarketYesterday()
+def getVol(day):   # 单位：亿人民币
+    pdf = getMarket(day)
     vol_sh  = pdf[2:3]['money'][2]                   # 上海市场
     vol_sz  = pdf[5:6]['money'][5]                   # 深市场  
     vol_gem = pdf[6:7]['money'][6]                   # 创业板
     return  { 'vol_sh':vol_sh, 'vol_sz':vol_sz, 'vol_gem':vol_gem}
 
 
-def getCurTor():   # turnOver ratio. 单位：％
-    pdf = getMarketYesterday()
+def getTor(day):   # turnOver ratio. 单位：％
+    pdf = getMarket(day)
     tor_sh  = pdf[2:3]['turnover_ratio'][2]           # 上海市场
     tor_sz  = pdf[5:6]['turnover_ratio'][5]           # 深市场  
     tor_gem = pdf[6:7]['turnover_ratio'][6]           # 创业板
     return  {'tor_sh':tor_sh,  'tor_sz':tor_sz, 'tor_gem':tor_gem}
     
 
-# 2019.2.28:等待JQdatasdk更新,他们工程师已经建议添加
-def getCurMtss():  
+# 2019.2.28:等待JQdatasdk更新, 已经建议他们添加,工程师
+def getMtss(day):  
     pass
 
 # market PB: 得使用申万数据，使用jy查询     
-def getCurPB():    
+def getPB(day):    
     pdf = ()
     
     
@@ -68,7 +72,7 @@ def getSingleMtss(code, date):
     
 
     
-    
+"""    
 #--- 公司财务数据 ---
 #获取单季度/年度财务数据
 get_fundamentals(query(
@@ -95,8 +99,8 @@ get_fundamentals(query(
             # 最多返回个数，最大不超过10000行
             10000
         ), date=calDayFormat)
-    df["date"]=calDayFormat
-
+        df["date"]=calDayFormat
+"""
 
 
     
@@ -104,11 +108,12 @@ get_fundamentals(query(
 
 #---------- 获取市场位置信息----------
 def getMarket(date):
-    pdf =jq.finance.run_query(\      # type(l): pandas.core.frame.DataFrame
-                           jq.query(jq.finance.STK_EXCHANGE_TRADE_INFO)\       # type: sqlalchemy.orm.query.Query
-                           .filter(jq.finance.STK_EXCHANGE_TRADE_INFO.date==date)\
-                           .limit(10))
+    pdf =jq.finance.run_query(      # type(l): pandas.core.frame.DataFrame
+                              jq.query(jq.finance.STK_EXCHANGE_TRADE_INFO)       # type: sqlalchemy.orm.query.Query
+                              .filter(jq.finance.STK_EXCHANGE_TRADE_INFO.date==date)
+                              .limit(10))
     return pdf
+
 
 def getMarketYesterday():
     #today = time.strftime('%Y-%m-%d', time.localtime(time.time()))
@@ -116,6 +121,7 @@ def getMarketYesterday():
     oneday = datetime.timedelta(days=1)
     yesterday = (today - oneday).strftime('%Y-%m-%d')
     return getMarket(yesterday)
+
 
 # 申万指数，use jy: 
 def getSWdata(code, end_date=None, count=None, start_date=None):
@@ -128,27 +134,36 @@ def getSWdata(code, end_date=None, count=None, start_date=None):
                    
     code_df = jq.jy.run_query(jq.query(jq.jy.SecuMain.InnerCode, jq.jy.SecuMain.SecuCode, jq.jy.SecuMain.ChiName)\
                                      .filter(jq.jy.SecuMain.SecuCode.in_(df.Innercode)))
-    df = 
+    #df = 
 
-#---------- 获取成分股 -------------
+
+
+
+#-------------------------------- 获取成分股 -----------------------------------------------------------
 # 获取现在上证50列表
-def getSh50()
+def getSh50():
     return jq.get_index_stocks('000016.XSHG')
     
-def getSh180()  # 上证180
+
+def getSh180():  # 上证180
     return jq.get_index_stocks('000010.XSHG')
 
-def getHs300()  # 沪深300
+
+def getHs300():  # 沪深300
     return jq.get_index_stocks('000300.XSHG')
 
 
-def getZz500()  # 中证500
+def getZz500():  # 中证500
     return jq.get_index_stocks('000905.XSHG')
     
 
     
     
     
+
+
+
+
     
 if __name__ == "main":
     auth("18602122079", "calcaapi")

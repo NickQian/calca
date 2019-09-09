@@ -12,18 +12,21 @@ import (
         "fmt"
         "io/ioutil"
         "time"
+        . "qif"
         //"strconv"
         "encoding/json"
         "os"
         "log"
+        . "define"
         "strings"
+        "bytes"
         )
 
 
 var Log *log.Logger
-
-// inst the A parameters
-var A = new(T_A)
+var T_Now time.Time
+var Today string
+var A = new(T_A)               // Inst A parameters
 
 // inst the Bottom parameters container with 0
 var Botpara map[string]float64 = make(map[string]float64)
@@ -45,7 +48,9 @@ func init(){
 
         initBotpara(&Botpara)
 
-        Log.Println("<cmn-init> done. Date:", time.Now().Format("2006-01-02 15:04:05") )
+        T_Now = time.Now()
+        Today = time.Now().Format(TIME_LAYOUT_STR)
+        Log.Println("<cmn-init> done. T_Now, Today:", T_Now, Today )
         Print("<cmn-init> done.")
 }
 
@@ -63,7 +68,7 @@ func initBotpara(p *map[string]float64) (bool) {
 /* JSON 值可以是：数字（整数或浮点数）, 字符串（在双引号中）, 逻辑值（true 或 false）
 /*   数组（在方括号中）, 对象（在花括号中）, null
 /************************************************************************/
-func Get_calca_res(fn string) (o CalRes){
+func ReadCalcaRes(fn string) (o CalRes){
 
     //var jsonRes string
     var result string
@@ -84,24 +89,25 @@ func Get_calca_res(fn string) (o CalRes){
 }
 
 
-func Get_simtrade_res()(){
+// read real run result
+func ReadRrunRes()(){
 
 }
 
 
 /*** Bottom date will be set manually in the "date/bot_date" file ***/
-func Get_Bot_Date(fn string)(o []string){
-        var botdate string
+func ReadBotDate(fn string)(o []string){
+        var botdate []byte
 
         if fbyte, err := ioutil.ReadFile(FN_BOT_DATE); err == nil{
-                botdate = string(fbyte)
+                botdate = fbyte
         }else{
                 Log.Fatal("<Get_Bot_Date>: read date file error.")
         }
 
-        for _, line := range strings.SplitAfter(botdate, "\n"){
+        for _, line := range bytes.Fields(botdate){
                 if len(line) > 0{                                      // avoid manually blank lines
-                        o = append(o, line)
+                        o = append(o, string(line) )
                 }
         }
         return
@@ -109,7 +115,7 @@ func Get_Bot_Date(fn string)(o []string){
 
 
 
-func Get_Bot_Rec()(d[][]float64){
+func ReadBotRec()(d[][]float64){
 /*
     var botrec string
     var botdata [][]float64
@@ -133,15 +139,92 @@ func Get_Bot_Rec()(d[][]float64){
 }
 
 
-/**********************************************************************************
-/*  fetch bottom indicators data from qif. also return these data
-/*  presmpnum: pre-sample number. Don't use data after bottom point.
-/**********************************************************************************/
-func FetchBotInd(date string, presmpnum int)(d [][]float64){
 
+
+/**********************************************************************************
+/*
+/*********************************************************************************/
+func ProcBotsData()(){
+
+}
+
+
+
+
+/**********************************************************************************
+/*  qif get bottom data from. return these data
+/**********************************************************************************/
+func GetBotsData(a []T_A )(bool){
+        botsdate := GetBotsDate()
+        for i_bot, win := range botsdate{
+//                index_bot := i_bot
+                for j_day, day := range win{
+                        MarketUpdate(&a[(i_bot+1)*(j_day+1)])
+                        if HavaLook(day, &a[(i_bot+1)*(j_day+1)]){
+                                Print("####### suc qif look once #######i_bots, j_day:", i_bot, j_day )
+                        }
+                }
+        }
+        return true
+}
+
+
+// return all bottoms window date according the bottom record file in ../data/
+func GetBotsDate()(o [][]string){
+        botsDate := ReadBotDate(FN_BOT_DATE)
+
+        for _, date := range botsDate{
+                bw := GetBotWindow(date, PRE_SMP_NUM)
+                o = append(o, bw)
+        }
         return
 }
+
+
+
+/********  return 1 bottom window *********
+/*  presmpnum: pre-sample number. Don't use data after bottom point. */
+func GetBotWindow(date string, prenum int)(bw []string){
+        var lastdaytmp time.Time
+
+        if dateTime, err := time.ParseInLocation(TIME_LAYOUT_SHORT, date, time.Local); err != nil{   // (layout, value string)
+                Print("<GetBotWindow> error: time.Parse error. Maybe wrong date input.")
+        }else{
+                lastdaytmp = dateTime
+        }
+
+        for i:=0; i < prenum; i++{
+                lastdaytmp = LastDay(lastdaytmp)
+                dayStr := strings.SplitAfter(lastdaytmp.Format(TIME_LAYOUT_STR), " ")   // func (t Time) Format(layout string)(string)
+                bw = append(bw, dayStr[0])
+        }
+        return
+}
+
+
+func LastDay(day time.Time)(lastday time.Time){
+        lastday = day.AddDate(0, 0, -1)
+        return
+}
+
+
+func OperateTime()(bool){
+        now := time.Now()
+        fmt.Println("--now is`````>", now)
+
+        d, _ := time.ParseDuration("-24h")
+        d1 := now.Add(d)
+        fmt.Println("--d is:->",d, "--d1 is:->",d1)
+
+        year, month, day := now.Date()    //func (t Time)Date()(year int, month Month, day int)
+        fmt.Println("--->",year, month, day)
+
+       return true
+}
+
+
 
 func WriteBotInd()(bool){
-        return
+        return true
 }
+

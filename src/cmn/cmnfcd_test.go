@@ -11,25 +11,41 @@ package cmn_test
 import (
          "testing"
          "cmn"
-         "fmt"
-         )
+         "define"
+)
 
 
 
-func TestGet_Bot_Date(t *testing.T){
-        cmn.Print("@@1 : FN_BOT_DATE is:", cmn.FN_BOT_DATE)
+func TestGetBotsDate(t *testing.T){
+        botsDate := cmn.GetBotsDate()
+        t.Logf("<TestGetBotsDate>: %v ", botsDate)
+}
 
-        date := cmn.Get_Bot_Date(cmn.FN_BOT_DATE)
+
+func TestGetBotWindow(t *testing.T){
+        bw := cmn.GetBotWindow("2019-01-02", 10)
+        t.Logf("<TestGetBotWindown>: %v ", bw)
+}
+
+
+func TestOperateTime(t *testing.T){
+        res := cmn.OperateTime()
+        t.Logf("<OperateTime> %t ", res)
+}
+
+
+func TestReadBotDate(t *testing.T){
+        date := cmn.ReadBotDate(define.FN_BOT_DATE)
 
         if len(date) == 0{
                 t.Logf("Err_Testing: <Get_Bot_Date>: len(d) is  %d ", len(date) )
                 t.Errorf("Err_Testing: <Get_Bot_Date>: len(d) is  %d ", len(date))
         }else{
-                t.Logf("<TestGet_Bot_Date>: date result: ", date)
+                t.Logf("<TestReadBotDate>: date result: %s ", date)
         }
 
         if cap(date) == 0{
-                t.Errorf("Err_Testing: <Get_Bot_Date>: cap(d) is  %d ", cap(date))
+                t.Errorf("Err: <TestReadBotDate>: cap(d) is  %d ", cap(date))
         }
 }
 
