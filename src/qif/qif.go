@@ -6,15 +6,18 @@
 /* ----
 /*  License: BSD
 /* ----
+/*  0.2?: ?give up go-python and use gRPC? - 2019.9
 /*  0.1.1: 放弃使用interface, 采用struct里面放函数指针的办法 - 2019.6  Nick cKing
-/*  0.1.0: init version - 2019.1 -  Nick cKing
+/*  0.1: init version - 2019.1 -  Nick cKing
 /************************************************************************************************************/
 
 package qif
 
 
 import(
-        "github.com/sbinet/go-python"
+        //"github.com/DataDog/go-python3"		// python3.
+	"github.com/sbinet/go-python"           // python.
+	"log"
         "fmt"
         "time"
         . "define"
@@ -54,25 +57,32 @@ var now = time.Now()
 
 var today string
 
-//var PyBrg *T_go2py
-var PyBrg *T_go2py = &T_go2py{Str2Py: python.PyString_FromString,
-                              Py2Str: python.PyString_AsString,
-                             }
+var PyBrg *T_go2py
+//var PyBrg *T_go2py = &T_go2py{Str2Py: python.PyString_FromString,
+//                              Py2Str: python.PyString_AsString,
+//                              }
 
+var PyModule *python.PyObject
 
 //------------------------ func实现 ------------------------------------
 
 func MarketUpdate(a *T_A) (suc bool){
-        AstatDic, _  := goCallpy("getMarket", today)
-        a.Cmv.Cmv_total = AstatDic["cmv_total"]
-        return true
+        AstatDic, _  := goCallpy("getMarketMap", today)
+        //a.Cmv.Cmv_total = AstatDic["cmv_total"]
+        fmt.Println("MarketUpdate done. Result:", AstatDic)
+	return true
 }
 
 
-// have a look
+// have a(a stock) look
 func HavaLook(day string, a *T_A) (bool){
-        peDic   := GetPE(day)
-        pbDic   := GetPB(day)
+        peDic  := GetPE(day)
+        dicmkt := GetMarket(day)
+        if dicmkt == nil{
+        	return false
+        }
+        fmt.Println("&$^#$^##$^--peDic, dicmkt:", peDic, dicmkt)
+        /*pbDic   := GetPB(day)
         volrDic := GetVolr(day)
         tnrDic  := GetTnr(day)
         mtsrDic := GetMtsr(day)
@@ -80,10 +90,16 @@ func HavaLook(day string, a *T_A) (bool){
         a.Pb.Pb_sh = pbDic.Pb_sh
         a.Volr.Volr = volrDic.Volr
         a.Tnr.Tnr = tnrDic.Tnr
-        a.Mtsr.Mtsr_total = mtsrDic.Mtsr_total
+        a.Mtsr.Mtsr_total = mtsrDic.Mtsr_total  */
         return true
 }
 
+
+func GetMarket(day string)(omap map[string]float64){
+	omap = make(map[string]float64, 77)
+	omap, _ = goCallpy("getMarketMap", day)
+	return
+}
 
 func GetPE(day string) (pe T_pe) {
         peMap, _ := goCallpy("getPE", day)
@@ -121,24 +137,36 @@ func GetMtsr(day string) (o T_mtsr) {
 //---------------------- python 桥接 ------------------------------------
 
 type T_go2py struct{
-        Str2Py func(string)(*python.PyObject)     // func PyString_FromString(v string) *PyObject
-        Py2Str func(*python.PyObject)(string)
+         Str2Py func(string)(*python.PyObject)      // func PyString_FromString(v string) *PyObject
+         Py2Str func(*python.PyObject)(string)
+	 Num2Py func(int)(*python.PyObject)          // func PyInt_FromLong(val int) *PyObject
+	 Py2Num func(*python.PyObject)(float64)      // func PyFloat_AsDouble(self *PyObject) float64
 }
 
 //PyStr := python.PyString_FromString
 //GoStr := python.PyString_AS_STRING
 
 
+// init python & import module & login
 func go2pyInit()(suc bool){     //pymodule *python.PyObject){        //, PyBrg *T_go2py){
         suc = false
-        if err:= python.Initialize(); err != nil{
-                panic(err.Error())
+
+        //python.Py_Initialize()
+	//if !python.Py_IsInitialized() {
+
+	err := python.Initialize()
+        if err != nil {
+                //panic(err.Error())
+		panic("Err: <go2pyInit> initial failed. ")
+                log.Panic(err)
         }else{
-               fmt.Println("info: python.Initialize done! ")
+		fmt.Println("info: python Py_Initialize done! ")
         }
 
-        /* PyBrg = &T_go2py{Str2Py: python.PyString_FromString,
+        PyBrg = &T_go2py{Str2Py: python.PyString_FromString,
                          Py2Str: python.PyString_AsString,
+			 Num2Py: python.PyInt_FromLong,        // func PyInt_FromLong(val int) *PyObject
+			 Py2Num: python.PyFloat_AsDouble,      // func PyFloat_AsDouble(self *PyObject) float64
                         }
 
         //--- select Qif的公司，选一家，注释掉其它家
@@ -148,83 +176,83 @@ func go2pyInit()(suc bool){     //pymodule *python.PyObject){        //, PyBrg *
                 case "RQ":      PyModule = ImportModule("./", "if_rq")
                 case "BQ":      PyModule = ImportModule("./", "if_bq")
                 case "tushare": PyModule = ImportModule("./", "if_ts")
-                default:  //Log.Fatal("Err: [qif]: no Qif configurated.")
-                        panic("Err: Wrong (QIF_VENDOR) value.")
+                default:        //Log.Fatal("Err: [qif]: no Qif configurated.")
+                        	panic("Err: Wrong (QIF_VENDOR) value.")
         }
-        */
-
-        suc = true
-        fmt.Println("<go2pyInit> Init & import module done!  ")
-
+        if PyModule == nil{
+                panic(" #: Error: import result nil.")
+        }
+        fmt.Printf(" PyModule: %v, [MODULE]repr()= %s   \n", PyModule,  PyBrg.Py2Str(PyModule.Repr() ) )
         return
 }
 
 
-
-
 func ImportModule(dir, name string)(*python.PyObject){
         //(1) add dir into python env "sys.path"
-        sysModule := python.PyImport_ImportModule("sys")                           // func PyImport_ImportModule(name string) *PyObject
-        path := sysModule.GetAttrString("path")                                    // path is ['', '', '']
-        python.PyList_Insert(path, 0, PyBrg.Str2Py(dir) )                          // func PyList_Insert(self *PyObject, index int, item_to_insert *PyObject)
+        sysModule := python.PyImport_ImportModule("sys")                 // func PyImport_ImportModule(name string) *PyObject
+        path := sysModule.GetAttrString("path")                          // path is ['', '', '']
+        python.PyList_Insert(path, 0, PyBrg.Str2Py(dir) )                // func PyList_Insert(self *PyObject, index int, item_to_insert *PyObject)
+        path2 := python.PySys_GetObject("path")                          // func PySys_GetObject(name string) *PyObject
+        fmt.Println("sys.path is(after): ", path2)
         //(2) import *.py module in the dir which contain this *.py file
         return python.PyImport_ImportModule(name)
 }
 
 
-//func (pymodule *python.PyObject)goCallpy(defname string, args ... string){
-func goCallpy(defname string, args ... string)(omap map[string]float64, suc bool){
+func goCallpy(defname string, args ...string)(omap map[string]float64, suc bool){
         suc = false
-        var PyModule *python.PyObject                                               // = new(python.PyObject)
-
-
-        sysModule := python.PyImport_ImportModule("sys")                            // func PyImport_ImportModule(name string) *PyObject
-        path := sysModule.GetAttrString("path")                                     // path is ['','']
-        fmt.Println("sys.path is(before):", path)
-        python.PyList_Insert(path, 0, PyBrg.Str2Py("/home/nk/calca/src/qif") )      // func PyList_Insert(self *PyObject, index int, item_to_insert *PyObject)
-        fmt.Println("sys.path is(after):", path)
-
-        switch QIF_VENDOR {
-        case "JQ":      PyModule = python.PyImport_ImportModule("if_jq") //"./", "if_jq")
-                        fmt.Print("Info: QIF selected is JQ. \n "  )
-        case "UQ":      PyModule = python.PyImport_ImportModule("if_uq") //"./", "if_uq")
-        case "RQ":      PyModule = python.PyImport_ImportModule("if_rq") //"./", "if_rq")
-        case "BQ":      PyModule = python.PyImport_ImportModule("if_bq") //"./", "if_bq")
-        case "tushare": PyModule = python.PyImport_ImportModule("if_ts") //"./", "if_ts")
-        default:  //Log.Fatal("Err: [qif]: no Qif configurated.")
-                  panic("Err: Wrong (QIF_VENDOR) value.")
-        }
-
-        if PyModule == nil{
-                panic("##$$%%^&&&##: Error: import result nil.")
-        }
-
-        fmt.Printf(" @(1)->PyModule: %v, [MODULE]repr()= %s ", PyModule,  PyBrg.Py2Str(PyModule.Repr() ) )
-        fmt.Println(" @(2), defname is:    ", defname)
 
         f := PyModule.GetAttrString(defname)
-        fmt.Printf("@(3)->f: %v", f)
-
-        //func PyTuple_New(sz int) *PyObject
-        argv := python.PyTuple_New(len(args))                        //Py_BuildValue，PyTuple_SetItem
+        argv := python.PyTuple_New(len(args))           // func PyTuple_New(sz int) *PyObject
         for i, value := range args{
                 python.PyTuple_SetItem(argv, i, PyBrg.Str2Py(value)) //func PyTuple_SetItem(self *PyObject, pos int, o *PyObject) error
         }
+        fmt.Printf("------ (1)-----f:%v, defname: %v, argv: %v----->   \n", f, defname, argv)
 
-        resDict := f.Call(argv, python.Py_None)
-        keyObj := python.PyDict_Keys(resDict)
-        keys := PyBrg.Py2Str(keyObj)
-        for i, key := range keys{
-                //value := python.PyDict_GetItemString(resDict, key)
-                //omap[key] = PyBrg.Py2Str(value)
-                fmt.Println("@@@ <goCallpy> call map result :", i, key)
-                suc = true
-        }
+	resDict := f.Call(argv, python.Py_None)     // func (self *PyObject) Call(args, kw *PyObject) *PyObject
+        fmt.Printf("------ (2)----> <Call out>----- %v \n", resDict)
 
+	if defname != "Login_JQ"  &&  resDict != nil{
+		omap = DicResExtract2(resDict)
+		suc = true
+	}
         return
 }
 
 
+func DicResExtract(dicIn *python.PyObject)(omap map[string]float64){
+        keyObjs := python.PyDict_Keys(dicIn)           // return a PyListObject
+	var keys []string
+
+	for i:=0; i<python.PyList_Size(keyObjs); i++{       //func PyList_Size(self *PyObject) int
+		keyObj := python.PyList_GetItem(keyObjs, i) //func PyList_GetItem(self *PyObject, index int) *PyObject
+                key := PyBrg.Py2Str(keyObj)
+	        keys = append(keys, key)
+	        fmt.Println("------Dic Extract (3)--keyObj,key,keys:--->", keyObj, key, keys)
+	}
+	omap = make(map[string]float64, python.PyList_Size(keyObjs))
+
+        for _, key := range keys{
+                itemValue := python.PyDict_GetItemString(dicIn, key)
+       		omap[key] = python.PyFloat_AsDouble(itemValue)        //PyInt_FromLong
+        }
+	return
+}
+
+
+func DicResExtract2(dicIn *python.PyObject)(omap map[string]float64){
+	dicItems := python.PyDict_Items(dicIn)  //func PyDict_Items(self *PyObject) *PyObject{Return a PyListObject }
+        omap = make(map[string]float64, python.PyList_Size(dicItems))
+
+        for i:=0; i<python.PyList_Size(dicItems); i++{
+        	dicItem := python.PyList_GetItem(dicItems, i)    // return a PyListObject
+		keyObj   := python.PyTuple_GetItem(dicItem, 0)
+		valueObj := python.PyTuple_GetItem(dicItem, 1)
+		key   := PyBrg.Py2Str(keyObj)
+		omap[key] = python.PyFloat_AsDouble(valueObj)        //PyInt_FromLong
+        }
+        return
+}
 
 // ----------------- operate with python api ---------------------
 
@@ -236,11 +264,10 @@ func init(){
 
         // init go_py bridge
         go2pyInit()
-        //pymodule  = go2pyInit()
-
         QifLogin()
+        fmt.Println("<go2pyInit> Init & import module done & log in successfully!  ")
 
-        // fetch today data once to update A status
+/*        // fetch today data once to update A status
         if _, e := GetCurPE(); e != nil{
                 //log.Fatalln("fatal Err: Qif not get PE data ")
                 panic("Error: Qif not get PE data")
@@ -254,15 +281,20 @@ func init(){
         if _, e := GetCurVolr(); e != nil{
                 panic("Error: Qif not get Vol data")
         }
+*/
+
 }
 
 
-func QifLogin( )(bool){
-        _, suc := goCallpy("Login_JQ", "18602122079", "calcaapi")
+func QifLogin( )(suc bool){
+	_, CallRes := goCallpy("Login_JQ", "18602122079", "calcaapi")
+        fmt.Println("QifLogin success result:", CallRes)
+/*
         if suc {
-                fmt.Println("QifLogin success.")
+                fmt.Println("Info: QifLogin success.")
         }
-        return suc
+*/
+      return suc
 }
 
 
