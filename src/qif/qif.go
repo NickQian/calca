@@ -6,7 +6,7 @@
 /* ----
 /*  License: BSD
 /* ----
-/*  0.2?: ?give up go-python and use gRPC? - 2019.9
+/*  0.2?:  ?give up go-python and use gRPC? - 2019.9
 /*  0.1.1: 放弃使用interface, 采用struct里面放函数指针的办法 - 2019.6  Nick cKing
 /*  0.1: init version - 2019.1 -  Nick cKing
 /************************************************************************************************************/
@@ -23,6 +23,8 @@ import(
         . "define"
         "errors"
         "strings"
+        "runtime"
+        "path"
 )
 
 
@@ -66,39 +68,44 @@ var PyModule *python.PyObject
 
 //------------------------ func实现 ------------------------------------
 
-func MarketUpdate(a *T_A) (suc bool){
-        AstatDic, _  := goCallpy("getMarketMap", today)
-        //a.Cmv.Cmv_total = AstatDic["cmv_total"]
-        fmt.Println("MarketUpdate done. Result:", AstatDic)
+func  MarketUpdate(a *T_A) (suc bool){
+        suc = GetMarket(today, a)
+        if suc == false{
+        	fmt.Println("Error: <MarketUpdate> result is empty. Maybe internet access problem or not trade day.")
+        	return false
+        }
+        fmt.Println("<MarketUpdate> done. Result:", suc)
 	return true
 }
 
 
-// have a(a stock) look
-func HavaLook(day string, a *T_A) (bool){
-        peDic  := GetPE(day)
-        dicmkt := GetMarket(day)
+func GetMarket(day string, a *T_A)(suc bool){
+	dicmkt := make(map[string]float64, 77)
+	dicmkt, _ = goCallpy("getMarketMap", day)
         if dicmkt == nil{
+		fmt.Println("Error: <GetMarket> result dicmkt is nil. Maybe internet problem or not trade day. ")
         	return false
         }
-        fmt.Println("&$^#$^##$^--peDic, dicmkt:", peDic, dicmkt)
-        /*pbDic   := GetPB(day)
-        volrDic := GetVolr(day)
-        tnrDic  := GetTnr(day)
-        mtsrDic := GetMtsr(day)
-        a.Pe.Pe_sh = peDic.Pe_sh
-        a.Pb.Pb_sh = pbDic.Pb_sh
-        a.Volr.Volr = volrDic.Volr
-        a.Tnr.Tnr = tnrDic.Tnr
-        a.Mtsr.Mtsr_total = mtsrDic.Mtsr_total  */
-        return true
+        fmt.Println("<GetMarket> result: day, dicmkt:", day, dicmkt)
+
+	return 	dicToA(dicmkt, a)
 }
 
+func dicToA(dicmkt map[string]float64, a *T_A)(bool){
+        a.Pe.Pe_sh,   a.Pe.Pe_sz,   a.Pe.Pe_gem   = dicmkt["pe_sh"],  dicmkt["pe_sz"],  dicmkt["pe_szm"]
 
-func GetMarket(day string)(omap map[string]float64){
-	omap = make(map[string]float64, 77)
-	omap, _ = goCallpy("getMarketMap", day)
-	return
+        a.Cmc.Cmc_sh, a.Cmc.Cmc_sz, a.Cmc.Cmc_gem = dicmkt["cmc_sh"], dicmkt["cmc_sz"], dicmkt["cmc_gem"]
+        a.Cmc.Cmc_total = a.Cmc.Cmc_sh + a.Cmc.Cmc_sz
+
+        a.Tnr.Tnr_sh, a.Tnr.Tnr_sz = dicmkt["tnr_sh"], dicmkt["pe_sz"]
+
+        vol_sh,  vol_sz,  vol_gem := dicmkt["vol_sh"], dicmkt["vol_sz"], dicmkt["vol_gem"]
+	a.Volr.Volr_total = (vol_sh + vol_sz)/a.Cmc.Cmc_total
+	a.Volr.Volr_gem   = vol_gem/a.Cmc.Cmc_gem
+
+	//mtss_sh, Mtss_sh := dicmkt["mtss_sh"], dicmkt["mtss_sz"]
+        //a.Mtsr.Mtsr_total = (mtss_sh + mtss_sz)/a.Cmc.Cmc_total
+	return true
 }
 
 func GetPE(day string) (pe T_pe) {
@@ -154,6 +161,10 @@ func go2pyInit()(suc bool){     //pymodule *python.PyObject){        //, PyBrg *
         //python.Py_Initialize()
 	//if !python.Py_IsInitialized() {
 
+	_, filename, _, _ :=runtime.Caller(1)
+	pyFilePath := path.Join(path.Dir(filename), "./")
+	fmt.Println("Info;pyFilePath:", pyFilePath)
+
 	err := python.Initialize()
         if err != nil {
                 //panic(err.Error())
@@ -171,11 +182,11 @@ func go2pyInit()(suc bool){     //pymodule *python.PyObject){        //, PyBrg *
 
         //--- select Qif的公司，选一家，注释掉其它家
         switch QIF_VENDOR {
-                case "JQ":      PyModule = ImportModule("./", "if_jq")
-                case "UQ":      PyModule = ImportModule("./", "if_uq")
-                case "RQ":      PyModule = ImportModule("./", "if_rq")
-                case "BQ":      PyModule = ImportModule("./", "if_bq")
-                case "tushare": PyModule = ImportModule("./", "if_ts")
+                case "JQ":      PyModule = ImportModule(pyFilePath, "if_jq")
+                case "UQ":      PyModule = ImportModule(pyFilePath, "if_uq")
+                case "RQ":      PyModule = ImportModule(pyFilePath, "if_rq")
+                case "BQ":      PyModule = ImportModule(pyFilePath, "if_bq")
+                case "tushare": PyModule = ImportModule(pyFilePath, "if_ts")
                 default:        //Log.Fatal("Err: [qif]: no Qif configurated.")
                         	panic("Err: Wrong (QIF_VENDOR) value.")
         }
@@ -207,13 +218,18 @@ func goCallpy(defname string, args ...string)(omap map[string]float64, suc bool)
         for i, value := range args{
                 python.PyTuple_SetItem(argv, i, PyBrg.Str2Py(value)) //func PyTuple_SetItem(self *PyObject, pos int, o *PyObject) error
         }
-        fmt.Printf("------ (1)-----f:%v, defname: %v, argv: %v----->   \n", f, defname, argv)
+        fmt.Printf("--(1)--f:%v, defname: %v, argv: %v-----   \n", f, defname, argv)
 
-	resDict := f.Call(argv, python.Py_None)     // func (self *PyObject) Call(args, kw *PyObject) *PyObject
-        fmt.Printf("------ (2)----> <Call out>----- %v \n", resDict)
-
-	if defname != "Login_JQ"  &&  resDict != nil{
-		omap = DicResExtract2(resDict)
+	if defname == "Login_JQ"{
+		sucObj := f.Call(argv, python.Py_None)     // func (self *PyObject) Call(args, kw *PyObject) *PyObject
+		fmt.Println("=== $$###: sucObj is:", sucObj)
+		return nil, sucObj.IsTrue()
+	}else{
+        	resDict := f.Call(argv, python.Py_None)     // func (self *PyObject) Call(args, kw *PyObject) *PyObject
+		if resDict != nil{
+        		//fmt.Printf("--(2)-- <Call out>: %v \n", resDict)
+			omap = DicResExtract2(resDict)
+		}
 		suc = true
 	}
         return
@@ -228,14 +244,14 @@ func DicResExtract(dicIn *python.PyObject)(omap map[string]float64){
 		keyObj := python.PyList_GetItem(keyObjs, i) //func PyList_GetItem(self *PyObject, index int) *PyObject
                 key := PyBrg.Py2Str(keyObj)
 	        keys = append(keys, key)
-	        fmt.Println("------Dic Extract (3)--keyObj,key,keys:--->", keyObj, key, keys)
 	}
 	omap = make(map[string]float64, python.PyList_Size(keyObjs))
 
         for _, key := range keys{
                 itemValue := python.PyDict_GetItemString(dicIn, key)
-       		omap[key] = python.PyFloat_AsDouble(itemValue)        //PyInt_FromLong
+       		omap[key] = PyBrg.Py2Num(itemValue)        //PyInt_FromLong
         }
+        //fmt.Println("------ (3) Dic Extract----:", omap)
 	return
 }
 
@@ -245,12 +261,13 @@ func DicResExtract2(dicIn *python.PyObject)(omap map[string]float64){
         omap = make(map[string]float64, python.PyList_Size(dicItems))
 
         for i:=0; i<python.PyList_Size(dicItems); i++{
-        	dicItem := python.PyList_GetItem(dicItems, i)    // return a PyListObject
+        	dicItem  := python.PyList_GetItem(dicItems, i)    // return a PyListObject
 		keyObj   := python.PyTuple_GetItem(dicItem, 0)
 		valueObj := python.PyTuple_GetItem(dicItem, 1)
-		key   := PyBrg.Py2Str(keyObj)
-		omap[key] = python.PyFloat_AsDouble(valueObj)        //PyInt_FromLong
+		key      := PyBrg.Py2Str(keyObj)
+		omap[key] = PyBrg.Py2Num(valueObj)        //PyInt_FromLong
         }
+        //fmt.Println("------ (3) Dic Extract----:", omap)
         return
 }
 
@@ -259,41 +276,22 @@ func DicResExtract2(dicIn *python.PyObject)(omap map[string]float64){
 func init(){
         todayFull := now.Format(TIME_LAYOUT_STR)
         todaySlice := strings.SplitAfter(todayFull, " ")
-        today = todaySlice[0]
-        fmt.Println("<qif:init>: today:", today)
+        today = strings.TrimSpace(todaySlice[0])
+        fmt.Printf("<qif:init>: today:%s---%s\n", today, todaySlice)
 
-        // init go_py bridge
         go2pyInit()
         QifLogin()
-        fmt.Println("<go2pyInit> Init & import module done & log in successfully!  ")
-
-/*        // fetch today data once to update A status
-        if _, e := GetCurPE(); e != nil{
-                //log.Fatalln("fatal Err: Qif not get PE data ")
-                panic("Error: Qif not get PE data")
-        }
-        if _, e := GetCurPB(); e != nil{
-                panic("Error: Qif not get PB data")
-        }
-        if _, e := GetCurMtsr(); e != nil{
-                panic("Error: Qif not get Mtss data")
-        }
-        if _, e := GetCurVolr(); e != nil{
-                panic("Error: Qif not get Vol data")
-        }
-*/
-
 }
 
 
 func QifLogin( )(suc bool){
-	_, CallRes := goCallpy("Login_JQ", "18602122079", "calcaapi")
-        fmt.Println("QifLogin success result:", CallRes)
-/*
-        if suc {
+	_, loginSuc := goCallpy("Login_JQ", "18602122079", "calcaapi")
+        fmt.Println("QifLogin success result:", loginSuc)
+        if loginSuc {
                 fmt.Println("Info: QifLogin success.")
+        }else{
+        	fmt.Println("Error: QifLogin failed.")
         }
-*/
       return suc
 }
 
