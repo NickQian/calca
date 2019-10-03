@@ -12,7 +12,7 @@ import (
         "fmt"
         "io/ioutil"
         "time"
-        . "qif"
+        "qif"
         //"strconv"
         "encoding/json"
         "os"
@@ -49,9 +49,12 @@ func init(){
         initBotpara(&Botpara)
 
         T_Now = time.Now()
-        Today = time.Now().Format(TIME_LAYOUT_STR)
-        Log.Println("<cmn-init> done. T_Now, Today:", T_Now, Today )
-        Print("<cmn-init> done.")
+        TodaySlice := strings.SplitAfter(T_Now.Format(TIME_LAYOUT_STR), " ")
+        Today = strings.TrimSpace(TodaySlice[0])
+
+        Print("<cmn-init>: Today:", Today )
+        Print("<cmn-init> done!", TodaySlice)
+        //Log.Println("<cmn-init> done. T_Now, Today:", T_Now, Today )
 }
 
 func initBotpara(p *map[string]float64) (bool) {
@@ -107,37 +110,11 @@ func ReadBotDate(fn string)(o []string){
 
         for _, line := range bytes.Fields(botdate){
                 if len(line) > 0{                                      // avoid manually blank lines
-                        o = append(o, string(line) )
+                        o = append(o, strings.TrimSpace(string(line)) )
                 }
         }
         return
 }
-
-
-
-func ReadBotRec()(d[][]float64){
-/*
-    var botrec string
-    var botdata [][]float64
-
-    if rd_contents, err := ioutil.ReadFile(FN_BOT_DATA); err == nil{
-        botrec =  strings.Replace(string(rd_contents), "\n", "", 1)
-        fmt.Println("read botdata success:", botdata)
-    }
-
-    //for _, line := range strings.Split(string(data), "\n") {
-    for i, line := range botrec{
-        if f, err := strconv.ParseInt(line, 10, 64); err == nil{
-                fmt.Println("read botdata ->float64:", line)
-                d.append(f)
-        }else{
-                panic(err)
-        }
-    }
-*/
-    return
-}
-
 
 
 
@@ -156,12 +133,15 @@ func ProcBotsData()(){
 /**********************************************************************************/
 func GetBotsData(a []T_A )(bool){
         botsdate := GetBotsDate()
+	fmt.Println("###@(1)###: botsdate:", botsdate)
         for i_bot, win := range botsdate{
-//                index_bot := i_bot
+        	fmt.Println("###@@(2)####, i_bot, win", i_bot, win)
                 for j_day, day := range win{
-                        MarketUpdate(&a[(i_bot+1)*(j_day+1)])
-                        if HavaLook(day, &a[(i_bot+1)*(j_day+1)]){
-                                Print("####### suc qif look once #######i_bots, j_day:", i_bot, j_day )
+                	fmt.Println("####@@(3)###, j_day, day:", j_day, day)
+			time.Sleep(1000 * time.Millisecond)
+			qif.QifLogin()
+                        if qif.GetMarket(day,  &a[(i_bot+1)*(j_day+1)]){
+                                Print("### suc <getmarket> once ### i_bots, j_day, day:", i_bot, j_day, day )
                         }
                 }
         }
@@ -196,7 +176,7 @@ func GetBotWindow(date string, prenum int)(bw []string){
         for i:=0; i < prenum; i++{
                 lastdaytmp = LastDay(lastdaytmp)
                 dayStr := strings.SplitAfter(lastdaytmp.Format(TIME_LAYOUT_STR), " ")   // func (t Time) Format(layout string)(string)
-                bw = append(bw, dayStr[0])
+                bw = append(bw, strings.TrimSpace(dayStr[0]))
         }
         return
 }
