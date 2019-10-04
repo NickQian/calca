@@ -133,22 +133,26 @@ func ProcBotsData()(){
 /**********************************************************************************/
 func GetBotsData(a []T_A )(bool){
         botsdate := GetBotsDate()
-	fmt.Println("##(1)##: botsdate:", botsdate)
+	fmt.Println("##(2)##: botsdate:", botsdate)
 	i_bot_valid, j_day_valid := 0, 0
+	lwsize := 0                                                           // last valid window size
         for i_bot, win := range botsdate{
-        	fmt.Println("##(2)##, i_bot, win", i_bot, win)
                 for j_day, day := range win{
-                	fmt.Println("##(3)##, j_day, day:", j_day, day)
+                	fmt.Println("##(3)##, i, j, day:", i_bot, j_day, day)
 			time.Sleep(1000 * time.Millisecond)
 			dicmkt := qif.GetMarket(day)
                         if len(dicmkt ) != 0{
-                                qif.FilDicToA(dicmkt, &a[(i_bot_valid)*(j_day_valid)])
+                                qif.FilDicToA(dicmkt, &a[(i_bot_valid)*lwsize + j_day_valid])
                                 j_day_valid++;
                                 Print("##(4)## i_bot_valid/i_bot_valid++:",i_bot_valid, j_day_valid )
                         }
+                        if j_day_valid == PRE_SMP_NUM{
+                        	Print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`")
+                        	break
+                        }
                 }
                 i_bot_valid++;
-                j_day_valid = 0;
+                lwsize, j_day_valid = j_day_valid, 0
         }
         return true
 }
@@ -159,7 +163,7 @@ func GetBotsDate()(o [][]string){
         botsDate := ReadBotDate(FN_BOT_DATE)
 
         for _, date := range botsDate{
-                bw := GetBotWindow(date, PRE_SMP_NUM)
+                bw := GetBotWindow(date, WIN_SMP_SIZE)
                 o = append(o, bw)
         }
         return
@@ -195,14 +199,14 @@ func LastDay(day time.Time)(lastday time.Time){
 
 func OperateTime()(bool){
         now := time.Now()
-        fmt.Println("--now is`````>", now)
+        fmt.Println("now is`````>", now)
 
         d, _ := time.ParseDuration("-24h")
         d1 := now.Add(d)
-        fmt.Println("--d is:->",d, "--d1 is:->",d1)
+        fmt.Println("d is:->",d, "--d1 is:->",d1)
 
         year, month, day := now.Date()    //func (t Time)Date()(year int, month Month, day int)
-        fmt.Println("--->",year, month, day)
+        fmt.Println("year, month, day are:",year, month, day)
 
        return true
 }
