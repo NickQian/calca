@@ -11,33 +11,29 @@ package qif
 import (
          "testing"
          . "define"
-//	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/assert"
 	"fmt"
 )
 
 
 
-func TestHavaLook(t *testing.T){
-	fmt.Println("-------------------- Test HaveaLook ------------------------")
+func TestGetMarket(t *testing.T){
+	fmt.Println("-------------------- Test <GetMarket> ------------------------")
 
         a := new(T_A)
-        a.Cmv.Cmv_total = 19999.0
-        t.Logf("a.Cmv.Cmv_total is: %v ", a.Cmv.Cmv_total)
-	suc := HavaLook("2019-9-12", a)
-	t.Logf("<TestHavalook>: %v. start assert.... the panic may caused by assert. ", suc)
-
+	dicmkt := GetMarket("2019-01-02")
+	suc := FilDicToA(dicmkt, a)
+	assert.True(t, suc)
+	t.Logf("<TestGetMarket>: FilDicToA result: suc %v. dicmkt: %v \n ", suc, dicmkt)
 }
 
 
 func TestMarketUpdate(t *testing.T){
 	fmt.Println("-------------------- TestMarketUpdate------------------------")
 
-
 	a := new(T_A)
-	a.Cmv.Cmv_total = 29999.0
-	t.Logf("a.Cmv.Cmv_total is: %v ", a.Cmv.Cmv_total) 
-
 	suc := MarketUpdate(a)
-	t.Logf("<TestMarketUpdate>: %v. start assert.... the panic may caused by assert. ", suc)
-//	assert.True(t, suc)
+
+	t.Logf("<TestMarketUpdate>: result:  %v \n", suc)
+
 }

@@ -16,7 +16,7 @@ package qif
 
 import(
         //"github.com/DataDog/go-python3"		// python3.
-	"github.com/sbinet/go-python"           // python.
+	"github.com/sbinet/go-python"           	// python.
 	"log"
         "fmt"
         "time"
@@ -52,12 +52,11 @@ var (
 
 
 //var Qif QIF   // interface
-//var A = nil
 
 var now = time.Now()
 //var now time.Time = time.Now()
 
-var today string
+var Today string
 
 var PyBrg *T_go2py
 //var PyBrg *T_go2py = &T_go2py{Str2Py: python.PyString_FromString,
@@ -69,43 +68,48 @@ var PyModule *python.PyObject
 //------------------------ func实现 ------------------------------------
 
 func  MarketUpdate(a *T_A) (suc bool){
-        suc = GetMarket(today, a)
-        if suc == false{
+        resDic := GetMarket(Today)
+        if len(resDic) == 0{
         	fmt.Println("Error: <MarketUpdate> result is empty. Maybe internet access problem or not trade day.")
         	return false
         }
+        FilDicToA(resDic, a)
         fmt.Println("<MarketUpdate> done. Result:", suc)
 	return true
 }
 
 
-func GetMarket(day string, a *T_A)(suc bool){
-	dicmkt := make(map[string]float64, 77)
+func GetMarket(day string)(dicmkt map[string]float64){
+	dicmkt = make(map[string]float64, 100)
 	dicmkt, _ = goCallpy("getMarketMap", day)
-        if dicmkt == nil{
-		fmt.Println("Error: <GetMarket> result dicmkt is nil. Maybe internet problem or not trade day. ")
-        	return false
+        if len(dicmkt) == 0{
+		fmt.Println("Error: <GetMarket> result dicmkt is empty. Maybe internet problem or not trade day. ")
+        	//return false
         }
         fmt.Println("<GetMarket> result: day, dicmkt:", day, dicmkt)
 
-	return 	dicToA(dicmkt, a)
+	return 	dicmkt
 }
 
-func dicToA(dicmkt map[string]float64, a *T_A)(bool){
-        a.Pe.Pe_sh,   a.Pe.Pe_sz,   a.Pe.Pe_gem   = dicmkt["pe_sh"],  dicmkt["pe_sz"],  dicmkt["pe_szm"]
 
-        a.Cmc.Cmc_sh, a.Cmc.Cmc_sz, a.Cmc.Cmc_gem = dicmkt["cmc_sh"], dicmkt["cmc_sz"], dicmkt["cmc_gem"]
-        a.Cmc.Cmc_total = a.Cmc.Cmc_sh + a.Cmc.Cmc_sz
+func FilDicToA(dicmkt map[string]float64, a *T_A)(bool){
+        if len(dicmkt) >0 {
+        	a.Pe.Pe_sh,   a.Pe.Pe_sz,   a.Pe.Pe_gem   = dicmkt["pe_sh"],  dicmkt["pe_sz"],  dicmkt["pe_szm"]
 
-        a.Tnr.Tnr_sh, a.Tnr.Tnr_sz = dicmkt["tnr_sh"], dicmkt["pe_sz"]
+	        a.Cmc.Cmc_sh, a.Cmc.Cmc_sz, a.Cmc.Cmc_gem = dicmkt["cmc_sh"], dicmkt["cmc_sz"], dicmkt["cmc_gem"]
+        	a.Cmc.Cmc_total = a.Cmc.Cmc_sh + a.Cmc.Cmc_sz
 
-        vol_sh,  vol_sz,  vol_gem := dicmkt["vol_sh"], dicmkt["vol_sz"], dicmkt["vol_gem"]
-	a.Volr.Volr_total = (vol_sh + vol_sz)/a.Cmc.Cmc_total
-	a.Volr.Volr_gem   = vol_gem/a.Cmc.Cmc_gem
+	        a.Tnr.Tnr_sh, a.Tnr.Tnr_sz = dicmkt["tnr_sh"], dicmkt["pe_sz"]
 
-	//mtss_sh, Mtss_sh := dicmkt["mtss_sh"], dicmkt["mtss_sz"]
-        //a.Mtsr.Mtsr_total = (mtss_sh + mtss_sz)/a.Cmc.Cmc_total
-	return true
+        	vol_sh,  vol_sz,  vol_gem := dicmkt["vol_sh"], dicmkt["vol_sz"], dicmkt["vol_gem"]
+		a.Volr.Volr_total = (vol_sh + vol_sz)/a.Cmc.Cmc_total
+		a.Volr.Volr_gem   = vol_gem/a.Cmc.Cmc_gem
+
+		//mtss_sh, Mtss_sh := dicmkt["mtss_sh"], dicmkt["mtss_sz"]
+        	//a.Mtsr.Mtsr_total = (mtss_sh + mtss_sz)/a.Cmc.Cmc_total
+		return true
+	}
+	return false
 }
 
 func GetPE(day string) (pe T_pe) {
@@ -146,7 +150,8 @@ func GetMtsr(day string) (o T_mtsr) {
 type T_go2py struct{
          Str2Py func(string)(*python.PyObject)      // func PyString_FromString(v string) *PyObject
          Py2Str func(*python.PyObject)(string)
-	 Num2Py func(int)(*python.PyObject)          // func PyInt_FromLong(val int) *PyObject
+	 //Num2Py func(int)(*python.PyObject)          // func PyInt_FromLong(val int) *PyObject
+	 Num2Py func(float64) *python.PyObject
 	 Py2Num func(*python.PyObject)(float64)      // func PyFloat_AsDouble(self *PyObject) float64
 }
 
@@ -176,7 +181,7 @@ func go2pyInit()(suc bool){     //pymodule *python.PyObject){        //, PyBrg *
 
         PyBrg = &T_go2py{Str2Py: python.PyString_FromString,
                          Py2Str: python.PyString_AsString,
-			 Num2Py: python.PyInt_FromLong,        // func PyInt_FromLong(val int) *PyObject
+			 Num2Py: python.PyFloat_FromDouble,        // func PyFloat_FromDouble(v float64) *PyObject
 			 Py2Num: python.PyFloat_AsDouble,      // func PyFloat_AsDouble(self *PyObject) float64
                         }
 
@@ -220,11 +225,13 @@ func goCallpy(defname string, args ...string)(omap map[string]float64, suc bool)
         }
         fmt.Printf("--(1)--f:%v, defname: %v, argv: %v-----   \n", f, defname, argv)
 
-	if defname == "Login_JQ"{
+	switch defname{
+	case "Login_JQ", "Login_RQ", "Login_BQ", "Login_UQ", "Login_TS":
 		sucObj := f.Call(argv, python.Py_None)     // func (self *PyObject) Call(args, kw *PyObject) *PyObject
 		fmt.Println("=== $$###: sucObj is:", sucObj)
 		return nil, sucObj.IsTrue()
-	}else{
+	case "":fmt.Println("Error: <goCallpy>: empty defname.")
+	default:   // default is get market dict
         	resDict := f.Call(argv, python.Py_None)     // func (self *PyObject) Call(args, kw *PyObject) *PyObject
 		if resDict != nil{
         		//fmt.Printf("--(2)-- <Call out>: %v \n", resDict)
@@ -276,11 +283,12 @@ func DicResExtract2(dicIn *python.PyObject)(omap map[string]float64){
 func init(){
         todayFull := now.Format(TIME_LAYOUT_STR)
         todaySlice := strings.SplitAfter(todayFull, " ")
-        today = strings.TrimSpace(todaySlice[0])
-        fmt.Printf("<qif:init>: today:%s---%s\n", today, todaySlice)
+        Today = strings.TrimSpace(todaySlice[0])
+        fmt.Printf("<qif:init>: Today:%s---%s\n", Today, todaySlice)
 
         go2pyInit()
         QifLogin()
+	time.Sleep(1000 * time.Millisecond)  // sleep to wait remote server finish authorization
 }
 
 
@@ -299,25 +307,25 @@ func QifLogin( )(suc bool){
 
 
 func GetCurPE()(o T_pe, err error){
-        o = GetPE(today)
+        o = GetPE(Today)
         return o, nil
 }
 
 
 func GetCurPB()(o T_pb, err error){
-        o = GetPB(today)
+        o = GetPB(Today)
         return o, nil
 }
 
 
 func GetCurMtsr()(o T_mtsr, err error){
-        o = GetMtsr(today)
+        o = GetMtsr(Today)
         return o, nil
 }
 
 
 func GetCurVolr()(o T_volr, err error){
-        o = GetVolr(today)
+        o = GetVolr(Today)
         return o, nil
 }
 
