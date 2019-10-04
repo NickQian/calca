@@ -21,7 +21,7 @@ func TestGetBotsData(t *testing.T){
 	suc := GetBotsData(a)
 	t.Logf("<TestGetBotsData>: %v ", suc)
 	assert.True(t, suc)
-	t.Log("<TestGetBotsData> ;;;assert passed;;;; ")
+	t.Log("<TestGetBotsData> ;;;assert passed. A: ", a)
 }
 
 

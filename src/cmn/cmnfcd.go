@@ -133,17 +133,22 @@ func ProcBotsData()(){
 /**********************************************************************************/
 func GetBotsData(a []T_A )(bool){
         botsdate := GetBotsDate()
-	fmt.Println("###@(1)###: botsdate:", botsdate)
+	fmt.Println("##(1)##: botsdate:", botsdate)
+	i_bot_valid, j_day_valid := 0, 0
         for i_bot, win := range botsdate{
-        	fmt.Println("###@@(2)####, i_bot, win", i_bot, win)
+        	fmt.Println("##(2)##, i_bot, win", i_bot, win)
                 for j_day, day := range win{
-                	fmt.Println("####@@(3)###, j_day, day:", j_day, day)
+                	fmt.Println("##(3)##, j_day, day:", j_day, day)
 			time.Sleep(1000 * time.Millisecond)
-			qif.QifLogin()
-                        if qif.GetMarket(day,  &a[(i_bot+1)*(j_day+1)]){
-                                Print("### suc <getmarket> once ### i_bots, j_day, day:", i_bot, j_day, day )
+			dicmkt := qif.GetMarket(day)
+                        if len(dicmkt ) != 0{
+                                qif.FilDicToA(dicmkt, &a[(i_bot_valid)*(j_day_valid)])
+                                j_day_valid++;
+                                Print("##(4)## i_bot_valid/i_bot_valid++:",i_bot_valid, j_day_valid )
                         }
                 }
+                i_bot_valid++;
+                j_day_valid = 0;
         }
         return true
 }
