@@ -17,6 +17,7 @@ import (
 
 
 
+
 func TestGetMarket(t *testing.T){
 	fmt.Println("-------------------- Test <GetMarket> ------------------------")
 
@@ -37,3 +38,12 @@ func TestMarketUpdate(t *testing.T){
 	t.Logf("<TestMarketUpdate>: result:  %v \n", suc)
 
 }
+
+
+func TestGetTradeDays(t *testing.T){
+	fmt.Println("-------------------- TestGetTradeDays------------------------")
+	days := GetTradeDays("2019-09-12")
+	t.Logf("<TestGetTradeDays>: %v \n", days)
+}
+
+
