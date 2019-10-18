@@ -23,6 +23,7 @@ import(
         . "define"
         "errors"
         "strings"
+        "strconv"
         "runtime"
         "path"
 )
@@ -65,6 +66,7 @@ var PyBrg *T_go2py
 
 var PyModule *python.PyObject
 
+
 //------------------------ func实现 ------------------------------------
 
 func  MarketUpdate(a *T_A) (suc bool){
@@ -80,8 +82,9 @@ func  MarketUpdate(a *T_A) (suc bool){
 
 
 func GetMarket(day string)(dicmkt map[string]float64){
-	dicmkt = make(map[string]float64, 100)
-	dicmkt, _ = goCallpy("getMarketMap", day)
+	//dicmkt = make(map[string]float64, 100)
+	dicmkt = make(map[string]float64)
+	dicmkt, _, _ = goCallpy("getMarketMap", day)
         if len(dicmkt) == 0{
 		fmt.Println("Error: <GetMarket> result dicmkt is empty. Maybe internet problem or not trade day. ")
         	//return false
@@ -94,33 +97,41 @@ func GetMarket(day string)(dicmkt map[string]float64){
 
 func FilDicToA(dicmkt map[string]float64, a *T_A)(bool){
         if len(dicmkt) >0 {
-        	a.Pe.Pe_sh,   a.Pe.Pe_sz,   a.Pe.Pe_gem   = dicmkt["pe_sh"],  dicmkt["pe_sz"],  dicmkt["pe_szm"]
-
 	        a.Cmc.Cmc_sh, a.Cmc.Cmc_sz, a.Cmc.Cmc_gem = dicmkt["cmc_sh"], dicmkt["cmc_sz"], dicmkt["cmc_gem"]
         	a.Cmc.Cmc_total = a.Cmc.Cmc_sh + a.Cmc.Cmc_sz
+
+        	a.Pe.Pe_sh,   a.Pe.Pe_sz,   a.Pe.Pe_gem   = dicmkt["pe_sh"],  dicmkt["pe_sz"],  dicmkt["pe_szm"]
+		a.Pe.Pe_total = a.Pe.Pe_sh * (a.Cmc.Cmc_sh/a.Cmc.Cmc_total) + a.Pe.Pe_sz * (a.Cmc.Cmc_sz/a.Cmc.Cmc_total)
 
 	        a.Tnr.Tnr_sh, a.Tnr.Tnr_sz = dicmkt["tnr_sh"], dicmkt["pe_sz"]
 
         	vol_sh,  vol_sz,  vol_gem := dicmkt["vol_sh"], dicmkt["vol_sz"], dicmkt["vol_gem"]
-		a.Volr.Volr_total = (vol_sh + vol_sz)/a.Cmc.Cmc_total
-		a.Volr.Volr_gem   = vol_gem/a.Cmc.Cmc_gem
+		a.Volr.Volr_total = 100*(vol_sh + vol_sz)/a.Cmc.Cmc_total
+		a.Volr.Volr_gem, a.Volr.Volr_sh, a.Volr.Volr_sz = 100*vol_gem/a.Cmc.Cmc_gem, 100*vol_sh/a.Cmc.Cmc_sh, 100*vol_sz/a.Cmc.Cmc_sz
 
-		//mtss_sh, Mtss_sh := dicmkt["mtss_sh"], dicmkt["mtss_sz"]
-        	//a.Mtsr.Mtsr_total = (mtss_sh + mtss_sz)/a.Cmc.Cmc_total
+		mtss_sh, mtss_sz := dicmkt["mtss_sh"], dicmkt["mtss_sz"]
+        	a.Mtsr.Mtsr_total = 100*(mtss_sh + mtss_sz)/a.Cmc.Cmc_total
+        	a.Mtsr.Mtsr_sh, a.Mtsr.Mtsr_sz = 100*mtss_sh/a.Cmc.Cmc_sh, 100*mtss_sz/a.Cmc.Cmc_sz
 		return true
 	}
 	return false
 }
 
+
+func GetTradeDays(date string)(days []string){
+	_, days, _ = goCallpy("getTradeDays", date, strconv.Itoa(PRE_SMP_NUM) )    // string to facilitate <goCallpy>
+	return
+}
+
 func GetPE(day string) (pe T_pe) {
-        peMap, _ := goCallpy("getPE", day)
+        peMap, _, _ := goCallpy("getPE", day)
         pe.Pe_sh = peMap["pe_sh"]
         return pe
 }
 
 
 func GetPB(day string) (pb T_pb) {
-        pbMap, _ := goCallpy("getPB", day)
+        pbMap, _, _:= goCallpy("getPB", day)
         pb.Pb_total = pbMap["pb_total"]
         return
 }
@@ -215,27 +226,33 @@ func ImportModule(dir, name string)(*python.PyObject){
 }
 
 
-func goCallpy(defname string, args ...string)(omap map[string]float64, suc bool){
+func goCallpy(defname string, args ...string)(omap map[string]float64, oslice[]string, suc bool){
         suc = false
 
         f := PyModule.GetAttrString(defname)
-        argv := python.PyTuple_New(len(args))           // func PyTuple_New(sz int) *PyObject
+        argv := python.PyTuple_New(len(args))                        // func PyTuple_New(sz int) *PyObject
+
         for i, value := range args{
                 python.PyTuple_SetItem(argv, i, PyBrg.Str2Py(value)) //func PyTuple_SetItem(self *PyObject, pos int, o *PyObject) error
         }
-        fmt.Printf("--(1)--f:%v, defname: %v, argv: %v-----   \n", f, defname, argv)
+        //fmt.Printf("--(1)--f:%v,defname:%v, argv:%v--\n", f, defname, argv)
 
 	switch defname{
 	case "Login_JQ", "Login_RQ", "Login_BQ", "Login_UQ", "Login_TS":
-		sucObj := f.Call(argv, python.Py_None)     // func (self *PyObject) Call(args, kw *PyObject) *PyObject
-		fmt.Println("=== $$###: sucObj is:", sucObj)
-		return nil, sucObj.IsTrue()
-	case "":fmt.Println("Error: <goCallpy>: empty defname.")
-	default:   // default is get market dict
-        	resDict := f.Call(argv, python.Py_None)     // func (self *PyObject) Call(args, kw *PyObject) *PyObject
-		if resDict != nil{
-        		//fmt.Printf("--(2)-- <Call out>: %v \n", resDict)
-			omap = DicResExtract2(resDict)
+		sucObj := f.Call(argv, python.Py_None)               // func (self *PyObject) Call(args, kw *PyObject) *PyObject
+		fmt.Println("--(2-1)--Qif_Login: sucObj is:", sucObj)
+		return nil, nil, sucObj.IsTrue()
+	case "getTradeDays":
+		resListObj := f.Call(argv, python.Py_None)
+		if resListObj != nil{
+			oslice = ListResExtract(resListObj)
+			suc = true
+		}
+	default:   						     // default is get market dict
+        	resDictObj := f.Call(argv, python.Py_None)              // func (self *PyObject) Call(args, kw *PyObject) *PyObject
+		if resDictObj != nil{
+        		//fmt.Printf("--(2-3)-- <Call out>: %v \n", resDict)
+			omap = DicResExtract2(resDictObj)
 		}
 		suc = true
 	}
@@ -278,6 +295,16 @@ func DicResExtract2(dicIn *python.PyObject)(omap map[string]float64){
         return
 }
 
+
+// only process string
+func ListResExtract(listIn *python.PyObject)(oslice []string){
+	for i:=0; i<python.PyList_Size(listIn); i++{          //func PyList_Size(self *PyObject) int
+                dayObj := python.PyList_GetItem(listIn, i)    // PyList_GetItem(self *PyObject, index int) *PyObject //PyList_GetI$
+                oslice = append(oslice, PyBrg.Py2Str(dayObj))
+        }
+	return
+}
+
 // ----------------- operate with python api ---------------------
 
 func init(){
@@ -293,7 +320,7 @@ func init(){
 
 
 func QifLogin( )(suc bool){
-	_, loginSuc := goCallpy("Login_JQ", "18602122079", "calcaapi")
+	_, _, loginSuc := goCallpy("Login_JQ", "18602122079", "calcaapi")
         fmt.Println("QifLogin success result:", loginSuc)
         if loginSuc {
                 fmt.Println("Info: QifLogin success.")
