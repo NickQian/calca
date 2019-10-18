@@ -36,6 +36,57 @@ def Login_JQ(username,password):
 
 
 
+def getMarketMap(day):
+	pdf = getMarket(day)
+	#print ("----pdf is:---", pdf)
+	if pdf.empty:
+		print("pyInfo: Err: <getMarket> result is empty! ")
+		return {}
+	else:
+		pe_sha  = pdf[0:1]['pe_average'][0]               # [0]上海A股. [0]->[0:1]
+		pe_sh   = pdf[2:3]['pe_average'][2]               # [2]上海市场 [2]->[2:3]
+		pe_szm  = pdf[4:5]['pe_average'][4]               # [4]深主板
+		pe_sz   = pdf[5:6]['pe_average'][5]               # [5]深市场
+		pe_gem  = pdf[6:7]['pe_average'][6]               # [6]创业板
+		tnr_sha = pdf[0:1]['turnover_ratio'][0]
+		tnr_sh  = pdf[2:3]['turnover_ratio'][2]
+		tnr_szm = pdf[4:5]['turnover_ratio'][4]
+		tnr_sz  = pdf[5:6]['turnover_ratio'][5]
+		tnr_gem = pdf[6:7]['turnover_ratio'][6]
+		cmc_sha = pdf[0:1]['circulating_market_cap'][0]
+		cmc_sh  = pdf[2:3]['circulating_market_cap'][2]
+		cmc_szm = pdf[4:5]['circulating_market_cap'][4]
+		cmc_sz  = pdf[5:6]['circulating_market_cap'][5]
+		cmc_gem = pdf[6:7]['circulating_market_cap'][6]
+		vol_sha = pdf[0:1]['money'][0]
+        	vol_sh  = pdf[2:3]['money'][2]
+        	vol_szm = pdf[4:5]['money'][4]
+        	vol_sz  = pdf[5:6]['money'][5]
+        	vol_gem = pdf[6:7]['money'][6]
+		mtss_sh, mtss_sz = getMtss(day)
+        	return  {'pe_sha':pe_sha,  'pe_sh':pe_sh,  'pe_szm':pe_szm,  'pe_sz':pe_sz,  'pe_gem':pe_gem,
+        		 'tnr_sha':tnr_sha,'tnr_sh':tnr_sh,'tnr_szm':tnr_szm,'tnr_sz':tnr_sz,'tnr_gem':tnr_gem,
+        	  	 'cmc_sha':cmc_sha,'cmc_sh':cmc_sh,'cmc_szm':cmc_szm,'cmc_sz':cmc_sz,'cmc_gem':cmc_gem,
+        	  	 'vol_sha':vol_sha,'vol_sh':vol_sh,'vol_szm':vol_szm,'vol_sz':vol_sz,'vol_gem':vol_gem,
+        	  	 'mtss_sh':mtss_sh,'mtss_sz':mtss_sz,
+        		}
+
+
+
+# 2019.2.28:等待JQdatasdk更新, 已经建议他们工程师添加
+def getMtss(date):   #date eg: '2019-05-23'
+	pd = jq.finance.run_query(      # type(l): pandas.core.frame.DataFrame
+	                          jq.query(jq.finance.STK_MT_TOTAL)       # type: sqlalchemy.orm.query.Query
+	                          .filter(jq.finance.STK_MT_TOTAL.date==date)
+	                          .limit(10)
+	                          )
+	#print("<getMtss> pd, pd[0:1]:", pd)
+	mtss_sh = pd[0:1]['fin_value'][0]
+	mtss_sz = pd[1:2]['fin_value'][1]
+	return mtss_sh, mtss_sz
+
+
+
 def getPE(day):
     	pdf = getMarket(day)
     	pe_sha = pdf[0:1]['pe_average'][0]               # 上海A股
@@ -62,59 +113,24 @@ def getTor(day):   # turnOver ratio. 单位：％
     return  {'tor_sh':tor_sh,  'tor_sz':tor_sz, 'tor_gem':tor_gem}
 
 
-# 2019.2.28:等待JQdatasdk更新, 已经建议他们添加,工程师
-def getMtss(day):
-    	pass
 
 # market PB: 得使用申万数据，使用jy查询
 def getPB(day):
 	pdf = ()
 
 
-def getMarketMap(day):
-	pdf = getMarket(day)
-	print ("------------------\n")
-	if pdf.empty:
-		print("pyInfo: Err: <getMarket> result is empty! ")
-	else:
-		pe_sha  = pdf[0:1]['pe_average'][0]               # 上海A股
-		pe_sh   = pdf[2:3]['pe_average'][2]               # 上海市场
-		pe_szm  = pdf[4:5]['pe_average'][4]               # 深主板
-		pe_sz   = pdf[5:6]['pe_average'][5]               # 深市场
-		pe_gem  = pdf[6:7]['pe_average'][6]               # 创业板
-		tnr_sha = pdf[0:1]['turnover_ratio'][0]
-		tnr_sh  = pdf[2:3]['turnover_ratio'][2]
-		tnr_szm = pdf[4:5]['turnover_ratio'][4]
-		tnr_sz  = pdf[5:6]['turnover_ratio'][5]
-		tnr_gem = pdf[6:7]['turnover_ratio'][6]
-		cmc_sha = pdf[0:1]['circulating_market_cap'][0]
-		cmc_sh  = pdf[2:3]['circulating_market_cap'][2]
-		cmc_szm = pdf[4:5]['circulating_market_cap'][4]
-		cmc_sz  = pdf[5:6]['circulating_market_cap'][5]
-		cmc_gem = pdf[6:7]['circulating_market_cap'][6]
-		vol_sha = pdf[0:1]['money'][0]
-        	vol_sh  = pdf[2:3]['money'][2]
-        	vol_szm = pdf[4:5]['money'][4]
-        	vol_sz  = pdf[5:6]['money'][5]
-        	vol_gem = pdf[6:7]['money'][6]
-        	return  { 'pe_sha':pe_sha,  'pe_sh':pe_sh,  'pe_szm':pe_szm,  'pe_sz':pe_sz,  'pe_gem':pe_gem,
-        		  'tnr_sha':tnr_sha,'tnr_sh':tnr_sh,'tnr_szm':tnr_szm,'tnr_sz':tnr_sz,'tnr_gem':tnr_gem,
-        	  	'cmc_sha':cmc_sha,'cmc_sh':cmc_sh,'cmc_szm':cmc_szm,'cmc_sz':cmc_sz,'cmc_gem':cmc_gem,
-        	  	'vol_sha':vol_sha,'vol_sh':vol_sh,'vol_szm':vol_szm,'vol_sz':vol_sz,'vol_gem':vol_gem,
-        		}
 
 
-
-#------------------------
-def getCurPE():
-    pdf = getMarketYesterday()
-    pe_sha = pdf[0:1]['pe_average'][0]               # 上海A股
-    pe_sh  = pdf[2:3]['pe_average'][2]               # 上海市场
-    pe_szm = pdf[4:5]['pe_average'][4]               # 深主板
-    pe_sz  = pdf[5:6]['pe_average'][5]               # 深市场
-    pe_gem = pdf[6:7]['pe_average'][6]               # 创业板
-    return  { 'pe_sh':pe_sh, 'pe_sz':pe_sz, 'pe_gem':pe_gem}
-
+#------------------------ Trade days -----------------------------------
+def getTradeDays(dateStr, num_prev):
+	validays = []
+	numpre = int(num_prev)
+	date = datetime.datetime.strptime(dateStr, '%Y-%m-%d')
+	tradays = jq.get_trade_days(end_date = date, count=numpre)
+	list_tradays = tradays.tolist()         # datetime in list
+	for day in list_tradays:
+		validays.append(day.strftime("%Y-%m-%d") )
+	return validays
 
 #----------------------------- single -----------------------------------
 
@@ -124,9 +140,10 @@ def getSinglePrice(code):
     today = time.strftime('%Y-%m-%d', time.localtime(time.time()))
     return jq.get_price(code, start_date= today, end_date= today, fields=['open','close'] )
 
+
 # 获取单个票/某天的融资余额
 def getSingleMtss(code, date):
-    return jq.get_mtss(code, date)
+    return jq.get_mtss(code,end_date=today,count =1)
 
 
 
@@ -163,13 +180,12 @@ get_fundamentals(query(
 
 
 ####================================ 内部使用函数 ============================================
-
-#---------- 获取市场位置信息----------
 def getMarket(date):
     pdf =jq.finance.run_query(      # type(l): pandas.core.frame.DataFrame
                               jq.query(jq.finance.STK_EXCHANGE_TRADE_INFO)       # type: sqlalchemy.orm.query.Query
                               .filter(jq.finance.STK_EXCHANGE_TRADE_INFO.date==date)
-                              .limit(10))
+                              .limit(30)
+                              )
     return pdf
 
 
@@ -221,29 +237,13 @@ def getZz500():  # 中证500
 
 
 
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
 	print ("User Name Login Result:", Login_JQ("18602122079", "calcaapi"))
-	print ("Try to get 2019.9.13 market data:", getMarketMap("2019-09-13") )
-	print ("Try to get 2019.9.12 market data:", getMarketMap("2019-09-12") )
-	print ("Try to get 2019.9.11 market data:", getMarketMap("2019-09-11") )
-	print ("Try to get 2019.9.10 market data:", getMarketMap("2019-09-10") )
-	print ("Try to get 2019.9.09 market data:", getMarketMap("2019-09-09") )
+	print ("Try to get 2019.9.13 market data:", getMarketMap("2019-09-11") )
+	days = getTradeDays(dateStr="2019-09-11", num_prev = "10")
 
-	print ("Try to get 2019.9.06 market data:", getMarketMap("2019-09-06") )
-	print ("Try to get 2019.9.05 market data:", getMarketMap("2019-09-05") )
-	print ("Try to get 2019.9.04 market data:", getMarketMap("2019-09-04") )
-	print ("Try to get 2019.9.03 market data:", getMarketMap("2019-09-03") )
-	print ("Try to get 2019.9.02 market data:", getMarketMap("2019-09-02") )   # Monday
-	print ("Try to get 2019.9.01 market data:", getMarketMap("2019-09-01") )
-	print ("Try to get 2019.8.31 market data:", getMarketMap("2019-08-31") )
+	print ("Try to get 2019.9.06 valid days", days )
 
+	print ("Try to get Mtss_total on 2019.10.11: ", getMtss("2019-10-10"))
 	#print ("Try to get Current market:", getMarketYesterday() )
 	#print ("Try to get Current PE:", getCurPE() )
