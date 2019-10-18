@@ -101,7 +101,7 @@ func SmpWeitInRow(row []float64)(xweit []float64){
 }
 
 
-// do dum for 2d data, return a slice(colume) of sum
+// do sum for 2-d data, return a slice(colume) of sum
 func sum2d(d [][]float64)(sum []float64){
         for _, row := range d{
                 sum = append(sum, sum1d(row))
