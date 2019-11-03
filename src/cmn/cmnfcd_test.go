@@ -22,13 +22,32 @@ func TestOperateTime(t *testing.T){
 }
 
 
-func TestReadBotDate(t *testing.T){
-        //date := ReadBotDate(dfn.FN_BOT_PUC_DATE)
-	date := ReadBotDate(dfn.FN_BOT_RLX_DATE)
+func TestReadRunData(t *testing.T){
+	rundata, err := ReadRunData(dfn.FN_RUN_DATA)
+	if err != nil{
+		t.Errorf("Err during Testing: <ReadRunData>: Err is  %v ", err)
+	}else{
+		t.Logf("rundata.LastBotDate is: %v, LastTopDate is: %v", rundata.LastBotDate, rundata.LastTopDate)
+	}
+}
 
+
+func TestReadCalRes(t *testing.T){
+	calRes, err := ReadCalRes(dfn.FN_RES_CALC)
+	if err != nil{
+		t.Errorf("Err during Testing:<ReadCalRes>. Err is: %v", err)
+	}else{
+		t.Logf("<ReadCalRes> result Bi: %v, Ti: %v, Scan_res:%v ", calRes.Bi, calRes.Ti, calRes.Scan_res)
+	}
+}
+
+
+func TestReadBtDate(t *testing.T){
+        //date := ReadBotDate(dfn.FN_BOT_PUC_DATE)
+	date := ReadBtDate(dfn.FN_BOT_RLX_DATE)
         if len(date) == 0{
-                t.Logf("Err_Testing: <Get_Bot_Date>: len(d) is  %d ", len(date) )
-                t.Errorf("Err_Testing: <Get_Bot_Date>: len(d) is  %d ", len(date))
+                t.Logf("Err during Testing: <Get_Bot_Date>: len(d) is  %d ", len(date) )
+                t.Errorf("Err during Testing: <Get_Bot_Date>: len(d) is  %d ", len(date))
         }else{
                 t.Logf(" date: %s ", date)
         }
@@ -37,7 +56,6 @@ func TestReadBotDate(t *testing.T){
                 t.Errorf("Err: <TestReadBotDate>: cap(d) is  %d ", cap(date))
         }
 }
-
 
 
 func TestGetBotWindow(t *testing.T){
@@ -80,3 +98,4 @@ func TestProcBotsData(t *testing.T){
         dicBot := ProcBotsData(a_punch, a_relax)
 	t.Log("<TestProcBotsData> result: dicBot: ", dicBot)
 }
+
