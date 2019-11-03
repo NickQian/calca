@@ -16,7 +16,9 @@ import (
         //"strconv"
         "encoding/json"
         "os"
+	"reflect"
         "log"
+        "errors"
         . "define"
         "strings"
         "bytes"
@@ -29,20 +31,20 @@ var Today string
 var A = new(T_A)               // Inst A parameters
 
 
-type T_A_BOT struct{
+type T_A_BT struct{
 	PeMap    map[string]float64
 	VolrMap  map[string]float64
 	MtsrMap  map[string]float64
 	ParaMap  map[string]float64
 }
 
-// inst the Bottom parameters container with 0
-var BotA = &T_A_BOT{PeMap   : make(map[string]float64),
-  		    VolrMap : make(map[string]float64),
-		    MtsrMap : make(map[string]float64),
-		    ParaMap : make(map[string]float64),
-}
 
+// inst the Bottom parameters container with 0
+var BotA = &T_A_BT{PeMap   : make(map[string]float64),
+  		   VolrMap : make(map[string]float64),
+		   MtsrMap : make(map[string]float64),
+		   ParaMap : make(map[string]float64),
+}
 
 
 //type Ftp func(a ...interface{})(n int, err error)
@@ -59,14 +61,14 @@ func init(){
                 panic("<cmnfd-init> Open logfile error")
         }
 
-        initBotpara(BotA)   // point input
-	todayInit()
-
+	initToday()
+        initBotpara(BotA)                // point input
+	initLogger()
         //Log.Println("<cmn-init> done. T_Now, Today:", T_Now, Today )
 }
 
 
-func todayInit(){
+func initToday(){
         T_Now = time.Now()
         TodaySlice := strings.SplitAfter(T_Now.Format(TIME_LAYOUT_STR), " ")
         Today = strings.TrimSpace(TodaySlice[0])
@@ -76,57 +78,48 @@ func todayInit(){
 }
 
 
-func initBotpara(p_BotA *T_A_BOT) (bool) {
+func initBotpara(p_BotA *T_A_BT) (suc bool) {
+	suc = false
         (*p_BotA).ParaMap["SWC_pe"]    = 0.22       // Subjective Weight Correction for entropy weight method
         (*p_BotA).ParaMap["SWC_pb"]    = 0.23
         (*p_BotA).ParaMap["SWC_volr"]  = 0.24
         (*p_BotA).ParaMap["SWC_mtsr"]  = 0.23
         (*p_BotA).ParaMap["SWC_tnr"]   = 0.11
-        return true
+        suc = true
+        return suc
 }
 
-/*----------------------------------------------------------------------
-/* JSON 值可以是：数字（整数或浮点数）, 字符串（在双引号中）, 逻辑值（true 或 false）
-/*   数组（在方括号中）, 对象（在花括号中）, null
-/************************************************************************/
-func ReadCalcaRes(fn string) (o CalRes){
-
-    //var jsonRes string
-    var result string
-
-    if jsonRes, err := ioutil.ReadFile(fn); err == nil{
-        result := strings.Replace(string(jsonRes), "\n", "", 1)
-	fmt.Println("read res.json success:", result)
-    }else{
-        fmt.Println("读取res.json错误")
-    }
-
-    //var res CalRes
-    if err := json.Unmarshal([]byte(result), &o); err != nil{
-            fmt.Println("res.json转struct错误")
-    }
-
-    return
+func initLogger()(error){
+        logfile, err := os.OpenFile("run.log", os.O_APPEND|os.O_CREATE, 666)
+        Log = log.New(logfile, "", log.Ldate | log.Ltime)
+        return err
 }
 
 
-// read real run result
-func ReadRrunRes()(){
+//----------------------------------------------------------------------
+// read bottom or top date.
+// Bottom date will be set manually in the "date/bot_date" file
 
+func ReadFile(fn string)(rbytes []byte, err error){
+	rbytes, err = ioutil.ReadFile(fn);
+
+	if err != nil{
+	       	fmt.Println("^^$$$$^^: fn, rbytes, err:", fn, rbytes, err)
+		Log.Fatal("Error: <Readfile>: read file err, fn is:", fn)
+	        return nil, err
+	}
+	return
 }
 
-
-/*** Bottom date will be set manually in the "date/bot_date" file ***/
-func ReadBotDate(fn string)(o []string){
-        var botdate []byte
-
-        if fbyte, err := ioutil.ReadFile(fn); err == nil{
-                botdate = fbyte
-        }else{
-                Log.Fatal("Error: <Get_Bot_Date>: read date file error.")
+func ReadBtDate(fn string)(o []string){
+        //var botdate []byte
+        fbyte, err := ReadFile(fn)
+        if err != nil{
+        	fmt.Println("Error: <ReadBtDate>, err is:", err)
+        	return nil
         }
 
-        for _, line := range bytes.Fields(botdate){
+        for _, line := range bytes.Fields(fbyte){
                 if len(line) > 0{                                      // avoid manually blank lines
                         o = append(o, strings.TrimSpace(string(line)) )
                 }
@@ -134,6 +127,114 @@ func ReadBotDate(fn string)(o []string){
         return
 }
 
+
+// ----------------------- Read json -------------------------------------------------------
+/* use interface to faciliate future modification
+/* JSON 值可以是：数字,字符串(双引号),bool(true/false,) 数组（方括号）, 对象（花括号）, null
+/*  Bool<-json Bool; float64<-Json number; string<-json string;
+/* []interface{}<-Json array; map[string]interface <- json obj; nil<- Json nul
+/*-----------------------------------------------------------------------------------------*/
+func JsonReadUnmash(fn_json string)(rdmapIf map[string]interface{}, err error){
+        rbytes, err := ReadFile(fn_json)
+	var rdIf interface{}           // left of assertion must be interface{}
+        if err = json.Unmarshal(rbytes, &rdIf); err != nil{
+        	fmt.Println("Error: <JsonReadUnmash> unmarshall error:", err)
+        	return
+        }
+
+        // type assertion to use interface
+        runIf, ok := rdIf.(map[string]interface{})
+       	fmt.Println("Info:runIf, ok:", runIf, ok)
+
+        if !ok{
+        	fmt.Println("Error: <JsonReadUnmash> type assertion err, ok value:", ok)
+        }
+        return runIf, nil
+}
+
+
+func ReadRunData(fn_rundata string)(rundata T_Rundata, err error){
+        rdIf, err := JsonReadUnmash(fn_rundata)
+      	rundata = JsonExtr_Rundata(rdIf)
+	return
+}
+
+
+func JsonExtr_Rundata(runIf map[string]interface{})(rundata T_Rundata){
+        for k, v := range runIf{
+        	//type assetion to use interface
+		switch k{     //switch vt := v.(type){
+		case "LastTop":
+            		vt_if, _ := v.(map[string]interface{})
+			for key, value := range vt_if{
+		   		if key == "date"{ rundata.LastTopDate = value.(string) }
+		        }
+		case "LastBot":
+            		vb_if, _ := v.(map[string]interface{})
+			for key, value := range vb_if{
+				if key == "date"{ rundata.LastBotDate = value.(string)}
+		        }
+		default:
+			fmt.Println("#Info: other json key that not processed.")
+		}//switch
+        }//for
+        return
+}
+
+
+func ReadCalRes(fn_calRes string) (calRes T_CalRes, err error){
+        rdIf, err := JsonReadUnmash(fn_calRes)
+       	calRes = JsonExtr_CalRes(rdIf)
+	return
+}
+
+
+func JsonExtr_CalRes(calResIf map[string]interface{})(calRes T_CalRes){
+        for k, v := range calResIf{
+                switch k{            // switch vt := v.(type){
+                case "btm":          // json obj -> map[string]interface{}
+	        	v_btm_if, _ := v.(map[string]interface{})
+                        fmt.Println("Info: v_btm_if type:", reflect.TypeOf(v_btm_if).String())
+                	for key, value := range v_btm_if{
+                        	if key == "bi"{ calRes.Bi = int(value.(float64)) }
+                        	if key == "ti"{ calRes.Ti = int(value.(float64)) }
+                        }
+                case "scan_res":     // json array -> []interface{}
+	        	v_scan_if, _ := v.([]interface{})
+      			fmt.Println("Info: scan_res type:",  reflect.TypeOf(v_scan_if).String())
+                        for index, value := range v_scan_if{
+                        	calRes.Scan_res[index]    = int(value.(float64))
+                        }
+		case "rrun_res":
+			fmt.Println("Info: rrun_res type:", reflect.TypeOf(v).String())
+			calRes.Rrun_res = v.(float64)
+                default:
+                	fmt.Println("#Info: other json key that not processed.")
+                }//switch
+        }//for
+        return
+}
+
+
+// read real run result
+func ReadSimTradeRes()(){
+
+}
+
+//----------------------------------- write json result ---------------------------------
+// write calca result(json)
+func WriteRes(res *T_CalRes) (err error) {
+        //t := time.Now()
+
+        if jsonRes, err := json.Marshal(res); err == nil{
+        	fmt.Println("res转json成功")
+        }else{
+        	if ioutil.WriteFile("res.json", jsonRes, 0644) != nil {
+        		return errors.New("写文件res.json出错.")
+        	}
+        }
+        return
+}
 
 
 /**********************************************************************************
@@ -250,7 +351,7 @@ func GetBotsData(fn_bot string, a []T_A )(bool){
 
 // return all bottoms window date according the bottom record file in ../data/
 func GetBotsDate(fnbotdate string)(o [][]string){
-        botsDate := ReadBotDate(fnbotdate)
+        botsDate := ReadBtDate(fnbotdate)
 	fmt.Println("###@#$ bostDate:", botsDate)
         for _, date := range botsDate{
                 bw := GetBotWindow(date)
@@ -312,9 +413,4 @@ func OperateTime()(bool){
        return true
 }
 
-
-
-func WriteBotInd()(bool){
-        return true
-}
 
