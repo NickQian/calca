@@ -1,5 +1,10 @@
-// -----------------------------------------------------------------------------------
-// v0.01 - policy A得出的mix model rate% & index position  --- 2018.8.30
+/*********************************************************
+/* top file of mix model rate% & index position
+/* ----
+/*  License: BSD
+/* ----
+/* v0.1  . --- 2019.1.15
+/*********************************************************/
 
 package mipos
 
@@ -9,15 +14,34 @@ import (
         "pa"
         //"pb"
         //"pc"
-        "cmn"
+        . "cmn"
         "fmt"
         )
 
-// --------------------------估值函数 ----------------------------
-// 0: 全仓买入;  100: 卖出（清空）
-func policya_mipos()(){
+
+
+/***********************************************************************
+/* mipos* is "估值函数"
+/*
+/***********************************************************************/
+// generate model data
+func MiposGm(policy string)(o T_Mipos){
+	
+	
+
+	switch policy{
+	case "policya": bot_trunk, bot_punch, top_crz, eqpo = MiposGm_Pa(botR, botP[]dfn.T_A, topH, topC[]dfn.T_A)
+	case "policyb": bot_trunk, bot_punch, top_crz, eqpo = MiposGm_Pb(botR, botP[]dfn.T_A, topH, topC[]dfn.T_A)
+	case "policyc": bot_trunk, bot_punch, top_crz, eqpo = MiposGm_Pc(botR, botP[]dfn.T_A, topH, topC[]dfn.T_A)
+	default: Log.Panicln("Critical Error: <Mipos> Policy not correct.Input is:", policy)
+}
+
+
+// estimate current market. policy is defined in define file
+func Mipos(todayA *dfn.T_A)(bi, ti int, mix_cw float64){
 
 }
+
 
 
 //(*-----------------------底、顶典型特征(状态)-----------------------*)
