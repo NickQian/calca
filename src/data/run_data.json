@@ -1,0 +1,17 @@
+{
+  "LastTop": {"date"  : "2015-06-08",
+              "mtsr"  : 7100,
+              "volr"  : 4.2,
+              "pe"    : 30.0,
+              "tor"   : 0.3
+	     },
+  "LastBot": {"date"  : "2019-01-04",
+              "mtsr"  : 22666,
+              "volr"  : 2.01,
+              "pe"    : 10.1,
+              "tor"   : 0.013
+	     },
+  "LastScanRes":["999999","888888","777777"],
+  "RrunSartDate":"2019-01-31",
+  "RrunLastShiftDate":""
+}
