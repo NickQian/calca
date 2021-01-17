@@ -42,6 +42,22 @@ func TestReadCalRes(t *testing.T){
 }
 
 
+func TestReadRrunRes(t *testing.T){
+	rrunRes, err := ReadRrunRes(dfn.Fn_RES_RRUN)
+	if err != nil{
+		t.Errorf("Err during testing:<ReadRrunRes>. Err is: %v", err)
+	}else{
+		t.Logf("CurValue:%v, CurState:%v, CurDate:%v", rrunRes.CurValue, rrunRes.CurState, rrunRes.CurDate)
+		t.Logf("CurCode.Code[0]:%v, CurCode.OrgValue[0]:%v, CurCode.CurValue[0]:%v ;",
+		            rrunRes.CurCode[0].Code, rrunRes.CurCode[0].OrgValue, rrunRes.CurCode[0].CurValue)
+		t.Logf("CurCode.Code[1]:%v, CurCode.OrgValue[1]:%v, CurCode.CurValue[1]:%v ;",
+		            rrunRes.CurCode[1].Code, rrunRes.CurCode[1].OrgValue, rrunRes.CurCode[1].CurValue)
+		t.Logf("CurCode.Code[2]:%v, CurCode.OrgValue[2]:%v, CurCode.CurValue[3]:%v ;",
+		            rrunRes.CurCode[2].Code, rrunRes.CurCode[2].OrgValue, rrunRes.CurCode[2].CurValue)
+	}
+}
+
+
 func TestReadBtDate(t *testing.T){
         //date := ReadBotDate(dfn.FN_BOT_PUC_DATE)
 	date := ReadBtDate(dfn.FN_BOT_RLX_DATE)
@@ -58,8 +74,8 @@ func TestReadBtDate(t *testing.T){
 }
 
 
-func TestGetBotWindow(t *testing.T){
-        bw := GetBotWindow("2019-01-02")
+func TestGetBtWindow(t *testing.T){
+        bw := GetBtWindow("2019-01-02")
         if len(bw) == 0{
         	t.Error("Error: <GetBotWindow>: bot window len is 0. Maybe internet access problem? ")
         }else{
@@ -68,34 +84,29 @@ func TestGetBotWindow(t *testing.T){
 }
 
 
-func TestGetBotWindow_raw(t *testing.T){
-        bw := GetBotWindow_raw("2019-01-02", 10)
+func TestGetBtWindow_raw(t *testing.T){
+        bw := GetBtWindow_raw("2019-01-02", 10)
         t.Logf("Window: %v ", bw)
 }
 
 
 
-func TestGetBotsDate(t *testing.T){
-        botsDate := GetBotsDate(dfn.FN_BOT_RLX_DATE)
+func TestGetBtsDate(t *testing.T){
+        botsDate := GetBtsDate(dfn.FN_BOT_RLX_DATE)
         t.Logf("<TestGetBotsDate>: %v ", botsDate)
 }
 
 
-func TestGetBotsData(t *testing.T){
-	var a = make([]dfn.T_A, 50)
-	suc := GetBotsData(dfn.FN_BOT_PUC_DATE, a)
-	t.Logf("<TestGetBotsData>: %v ", suc)
+func TestGetBtsData(t *testing.T){
+	//var a = make([]dfn.T_A, 50)
+	eggMaps, _, suc := GetBtsData(dfn.FN_BOT_PUC_DATE)
+	t.Logf("t.Logf <TestGetBtsData> result: %v ", suc)
 	assert.True(t, suc)
-	t.Log("<TestGetBotsData> ;;;assert passed. A: ", a)
+	t.Logf("t.Log <TestGetBtsData>. eggMap: %v ", eggMaps)
 }
 
 
-func TestProcBotsData(t *testing.T){
-	var a_punch, a_relax = make([]dfn.T_A, 100), make([]dfn.T_A, 100)
-	GetBotsData(dfn.FN_BOT_PUC_DATE, a_punch)
-        GetBotsData(dfn.FN_BOT_RLX_DATE, a_relax)
-
-        dicBot := ProcBotsData(a_punch, a_relax)
-	t.Log("<TestProcBotsData> result: dicBot: ", dicBot)
+func TestGetEigDm(t *testing.T){
+	eigDm, _ := GetEigDm(dfn.FN_BOT_PUC_DATE)
+	t.Log("<TestGetEigDm> result: ", eigDm)
 }
-

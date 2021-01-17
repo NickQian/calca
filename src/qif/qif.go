@@ -81,6 +81,11 @@ func  MarketUpdate(a *T_A) (suc bool){
 }
 
 
+func GetKline(dayStart, dayEnd string)(kline []float64){
+	
+	return
+}
+
 func GetMarket(day string)(dicmkt map[string]float64){
 	//dicmkt = make(map[string]float64, 100)
 	dicmkt = make(map[string]float64)
@@ -89,7 +94,7 @@ func GetMarket(day string)(dicmkt map[string]float64){
 		fmt.Println("Error: <GetMarket> result dicmkt is empty. Maybe internet problem or not trade day. ")
         	//return false
         }
-        fmt.Println("<GetMarket> result: day, dicmkt:", day, dicmkt)
+        //fmt.Println("<GetMarket> result: day, dicmkt:", day, dicmkt)
 
 	return 	dicmkt
 }

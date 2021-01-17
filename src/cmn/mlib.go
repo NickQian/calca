@@ -10,8 +10,12 @@ package cmn
 
 import(
         "math"
+	//"testing"
+        //"github.com/stretchr/testify/assert"
         "fmt"
 )
+
+//var T *testing.T = &testing.T{}
 
 // simple average
 func SimpleAvg(din []float64)(avg_out float64){
@@ -31,19 +35,32 @@ func SimpleAvg(din []float64)(avg_out float64){
 /* Note: "Entropy weight" is "Degree of distinction". Not weight itself.
 /* if X_ij are same, then their e =1 and the row's w =0. means you can remove these
 /**************************************************************************/
-func WeightEntSwc(din [][]float64, r []float64)(w []float64){
-        w_ent := WeightEnt(din)
+
+//Subjective Weight Correction on Weight result
+// din: data in;  r: subjective correction revise; w_scr: weight after revise
+func WeightSwc(w_in []float64, r []float64)(w_scr []float64){
+        //w_ent := WeightEnt(din)
         wxr := []float64{}
-        for i, _ := range w_ent{
-               wxr = append(wxr, w_ent[i]*r[i])
+
+	//assert.Equal(T, len(w_in), len(r))
+	//assert.NotEqual(T, len(w_in), len(r))
+	if (len(w_in) != len(r)){
+		fmt.Printf(" len(w_in) is: %v, len(r) is: %v \n", len(w_in), len(r))
+		Log.Panicln("<WeightSwc>: len(w_in) != len(r).")
+		Log.Fatal("Fatal_Error:<WeightSwc>: len(w_in) != len(r).")
+	}
+
+        for i, _ := range w_in{
+               wxr = append(wxr, w_in[i]*r[i])
         }
         sum_wxr := sum1d(wxr)
-        for i, _ := range w_ent{
-                w = append(w, (w_ent[i]*r[i]) / sum_wxr)
+        for i, _ := range w_in{
+                w_scr = append(w_scr, (w_in[i]*r[i]) / sum_wxr)
         }
         return
 }
 
+// every row is a indicator
 func WeightEnt(din [][]float64)(w []float64){
         diff := []float64{}
         //3)计算信息熵冗余度(差异)
@@ -61,7 +78,7 @@ func WeightEnt(din [][]float64)(w []float64){
 
 
 /*******************************************************************
-/* step 2: calculate Entropy                                       *
+/* step 2: calculate (row) Entropy                                       *
 /* Get entropy of every row( every row is a indicator)             *
 /*  0 < e < 1(if all element are same, then w is 0).                                                       *
 /******************************************************************/
