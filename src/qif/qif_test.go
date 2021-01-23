@@ -16,6 +16,10 @@ import (
 )
 
 
+func TestGetKline(t *testing.T){
+	kline := GetKline("000001.SH","20190103", "20210118")
+	t.Logf("<TestGetKline> res: %v \n", kline)
+}
 
 
 func TestGetMarket(t *testing.T){
