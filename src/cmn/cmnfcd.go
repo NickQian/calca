@@ -32,6 +32,12 @@ var T_Now time.Time
 var Today string
 var A = new(T_A)               // Inst A parameters
 
+var (
+        ErrPasswd       = errors.New("ERR: password or user name not correct \n")
+        ErrNoDataReturn = errors.New("ERR: no data return from qif \n")
+        ErrEmptyNoItem  = errors.New("ERR: slice or map is empty.no item to process \n")
+	ErrPlotFail     = errors.New("ERR: some error happens during plot.") 
+)
 
 type T_A_BT struct{
 	PeMap    map[string]float64

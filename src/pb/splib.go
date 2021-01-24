@@ -11,17 +11,15 @@ package pb
 
 import (
         "math/cmplx"
-        "github.com/mjibson/go-dsp/window"
+        _ "github.com/mjibson/go-dsp/window"
 	"github.com/mjibson/go-dsp/dsputils"
-        "cmn"
-	"github.com/stretchr/testify/assert"
+        _ "cmn"
         )
 
 
 
-func KlinePreprc(klineRvs []float64)(kl []float64){
-        kline := cmn.ReverseSlc(klineRvs)
-        kl    = RmvDc(kline) 
+func KlinePreprc(kline []float64)(kl []float64){
+        kl    = RmvDc(kline)
         return
 }
 
@@ -37,14 +35,14 @@ func RmvDc (kline []float64)(kl []float64){
 
 func GetCmplxAmp(cin []complex128)(fo [] float64){
 	for _, v := range cin{
-		fo = append(fo, cmplx.abs(v))
+		fo = append(fo, cmplx.Abs(v))
 	}
 	return
 }
 
 
 // generate the window to extract Low Freq
-func GenWin(L int, l_win int, winFunc func(int)[]float64))(win []float64){
+func GenWin(L int, l_win int, winFunc func(int)[]float64 )(win []float64){
 	win_org := winFunc(l_win)
 	pad := make([]float64, L - l_win)
 	win = append(win_org, pad...)
@@ -54,11 +52,14 @@ func GenWin(L int, l_win int, winFunc func(int)[]float64))(win []float64){
 
 // note: (comlex128, float64)
 func MultYW(Y_w []complex128, W_w []float64)(YL_w []complex128){
-	assert.Equal(t, len(Y_w), W_w)
+	//assert.Equal(t, len(Y_w), len(W_w))
+	if len(Y_w) != len(W_w){
+		panic("<splib>: len(Y_w) != len(W_w). Plese check it.")
+	}
 
 	W_w_c := dsputils.ToComplex(W_w)
 	for i:=0; i<len(Y_w);i++{
-		YL_w = append(YL_w, Y_w[i]*W_w_c[i]
+		YL_w = append(YL_w, Y_w[i]*W_w_c[i] )
 	}
 	return
 }

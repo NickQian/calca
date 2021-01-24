@@ -11,16 +11,17 @@ package pb
 import (
 	"github.com/mjibson/go-dsp/fft"
 	"github.com/mjibson/go-dsp/window"
-	"github.com/mjibson/go-dsp/dsputils"
+	_ "github.com/mjibson/go-dsp/dsputils"
 	. "define"
-	"cmn"
+	_ "cmn"
 	)
 
 // Frequency domain Analyze
 func KlineFa(kl []float64)(Y_w []complex128){
-	fftRes := fft.FFTreal(kl)
+	fftRes := fft.FFTReal(kl)
+	//PlotFa(fftRes, "FreqAmp")
 
-	PlotFa(fftRes, "FreqAmp")
+	return fftRes
 }
 
 
@@ -36,10 +37,10 @@ func FltK(kl []float64)( kf []float64){
 	YL_w := MultYW(Y_w, win)
 
 	// 4) iFFT -> yL_t
-	yL_t := IFFT(YL_w)          // IFFT(x []complex128)[]complex128
+	yL_t := fft.IFFT(YL_w)          // IFFT(x []complex128)[]complex128
 
 	// 5) last process
-	kf = yL_t
+	kf = GetCmplxAmp(yL_t)
 
 	return
 }
