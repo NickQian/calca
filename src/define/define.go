@@ -144,8 +144,11 @@ const(
 )
 
 const(
-	QIF_ACCESS_INTVL    = 100        // ms
-	FFT_INTEREST_POINTS = 25         // 
+	QIF_ACCESS_INTVL     = 100        // ms
+
+	FFT_FA_INTEREST_PTS  = 50
+	FFT_FLT_INTEREST_PTS = 10         // 10/15
+	FFT_FLT_PAD_LEN      = 0.2        // 0.2 * len
 )
 
 //----------------------- don't need modification --------------------------------------------

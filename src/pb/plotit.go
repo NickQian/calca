@@ -15,14 +15,14 @@ import (
 	"gonum.org/v1/plot/plotutil"
 	"gonum.org/v1/plot/vg"
 	"cmn"
-	"fmt"
+	 "fmt"
+	dfn "define"
 )
 
 //------------- Kline --------------
 
 func PlotKl(kl []float64, fn string) bool{
-	//kl := RmvDc(kline)
-	PlotSlicef(kl, "time", "Amp", "Kl")
+	PlotSlicef(kl, "time", "Amp", fn)
 	return true
 }
 
@@ -32,21 +32,21 @@ func PlotSlicef(slc []float64, xLable, yLable, fn string) bool{
 	if len(slc) == 0{ panic(cmn.ErrEmptyNoItem)   }
 	
 	p, _ := plot.New()
-	points := makeXY_Kline(slc)
+	points := makeXY_slcIn(slc)
 	plotutil.AddLinePoints(p, points)
 
 	p.Title.Text   = fn
 	p.X.Label.Text = xLable
 	p.Y.Label.Text = yLable
-	p.Save(4*vg.Inch, 4*vg.Inch, fn)
+	p.Save(8*vg.Inch, 8*vg.Inch, fn)
 	return true
 }
 
 
-func makeXY_Kline(kl []float64)(pts plotter.XYs){
-	pts = make(plotter.XYs, len(kl))
-	for i, v := range kl{
-	
+func makeXY_slcIn(slc []float64)(pts plotter.XYs){
+	pts = make(plotter.XYs, len(slc))
+	for i, v := range slc{
+		//fmt.Printf("##### len(kl): %v, i:%v, v:%v  \n", len(slc), i, v)
 		pts[i].X, pts[i].Y = float64(i), float64(v)
 	}
 	return
@@ -55,16 +55,39 @@ func makeXY_Kline(kl []float64)(pts plotter.XYs){
 //--------------- fft ------------------
 // complex128 as input
 func PlotFa(fa []complex128, fn string) bool{
-	Afreq := GetCmplxAmp(fa)
-	PlotSlicef(Afreq, "freq", "Amp", fn)
+	fmt.Println("Info: <PlotFa> starting...")
+	A_freq := GetCmplxAmp(fa)
+	F_axis := GetFreqAxis(fa)
+	PlotSliceXY(F_axis, A_freq, "freq", "Amp", fn)
+	fmt.Println("Info: <PlotFa> Finished...")
+
 	return true
 }
 
 
-func PlotSliceXY(x, y []float64, fn string)bool{
-	fmt.Print("<PlotSliceXY>")
-	return true
+func PlotSliceXY(x, y []float64, xLable, yLable, fn string) bool{
+        if len(x) == 0{ panic(cmn.ErrEmptyNoItem)   }
+        p, _ := plot.New()
+        points := makeXY_XYIn(x, y)          // the difference
+        plotutil.AddLinePoints(p, points)
+
+        p.Title.Text   = fn
+        p.X.Label.Text = xLable
+        p.Y.Label.Text = yLable
+        p.Save(8*vg.Inch, 8*vg.Inch, fn)
+        return true
 }
 
+
+func makeXY_XYIn(x, y []float64)(pts plotter.XYs){
+        pts = make(plotter.XYs, len(x))
+        for i, _ := range x{
+        	if ( i < dfn.FFT_FA_INTEREST_PTS ){
+                        //fmt.Printf("#### len(kl): %v, x:%v, y:%v  \n", len(x), x[i], y[i] )
+			pts[i].X, pts[i].Y = x[i], y[i]
+		}
+        }
+        return
+}
 
 //-------------- ifft ------------------
