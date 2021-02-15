@@ -63,24 +63,20 @@ def getMarketMap(day):
                 print("pyInfo: Err: <getMarket> result is empty! ")
                 return {}
         else:
-                pe_sh    = (df.loc[df['ts_code']=='000001.SH', 'pe_ttm']).ix[0] #[0] is just the row index of returned data series
-		pe_sh300 = (df.loc[df['ts_code']=='000300.SH', 'pe_ttm']).ix[4]
-		pe_sz    = (df.loc[df['ts_code']=='399001.SZ', 'pe_ttm']).ix[6]
-                pe_gem   = (df.loc[df['ts_code']=='399006.SZ', 'pe_ttm']).ix[8]
+                pe_sh    = (df.loc[df['ts_code']=='000001.SH', 'pe']).values.tolist()[0] #[0] is just the row index of returned data series
+		pe_sh300 = (df.loc[df['ts_code']=='000300.SH', 'pe']).values.tolist()[0]
+		pe_sz    = (df.loc[df['ts_code']=='399001.SZ', 'pe']).values.tolist()[0]
+                pe_gem   = (df.loc[df['ts_code']=='399006.SZ', 'pe']).values.tolist()[0]
 
-                tnr_sh    = (df.loc[df['ts_code']=='000001.SH', 'turnover_rate_f']).ix[0]
-                tnr_sh300 = (df.loc[df['ts_code']=='000300.SH', 'turnover_rate_f']).ix[4]
-		tnr_sz    = (df.loc[df['ts_code']=='399001.SZ', 'turnover_rate_f']).ix[6]
-		tnr_gem   = (df.loc[df['ts_code']=='399006.SZ', 'turnover_rate_f']).ix[8]
+                tnr_sh    = (df.loc[df['ts_code']=='000001.SH', 'turnover_rate_f']).values.tolist()[0]
+                tnr_sh300 = (df.loc[df['ts_code']=='000300.SH', 'turnover_rate_f']).values.tolist()[0]
+		tnr_sz    = (df.loc[df['ts_code']=='399001.SZ', 'turnover_rate_f']).values.tolist()[0]
+		tnr_gem   = (df.loc[df['ts_code']=='399006.SZ', 'turnover_rate_f']).values.tolist()[0]
 
-		pb_sh    = (df.loc[df['ts_code']=='000001.SH', 'pb']).ix[0] #[0] is just the row index of returned data series
-                pb_sh300 = (df.loc[df['ts_code']=='000300.SH', 'pb']).ix[4]
-                pb_sz    = (df.loc[df['ts_code']=='399001.SZ', 'pb']).ix[6]
-                pb_gem   = (df.loc[df['ts_code']=='399006.SZ', 'pb']).ix[8]
-
-		print ("###: pe:",  pe_sh,  pe_sh300,  pe_sz,  pe_gem)
-		print ("###: tnr:", tnr_sh, tnr_sh300, tnr_sz, tnr_gem)
-		print ("###: pb:",  pb_sh,  pb_sh300,  pb_sz,  pb_gem)
+		pb_sh    = (df.loc[df['ts_code']=='000001.SH', 'pb']).values.tolist()[0] #[0] is just the row index of returned data series
+                pb_sh300 = (df.loc[df['ts_code']=='000300.SH', 'pb']).values.tolist()[0]
+                pb_sz    = (df.loc[df['ts_code']=='399001.SZ', 'pb']).values.tolist()[0]
+                pb_gem   = (df.loc[df['ts_code']=='399006.SZ', 'pb']).values.tolist()[0]
 
                 #vol_sh  = pdf[2:3]['money'][2]
                 #mtss_sh, mtss_sz = getMtss(day)
@@ -108,16 +104,16 @@ def getMarket(date):
 def getTradeDays(end_date_str, num_prev):
         validays   = []
         numpre     = int(num_prev)
-        end_Date   = datetime.datetime.strptime(end_date_str, '%Y-%m-%d')
+        end_Date   = datetime.datetime.strptime(end_date_str, '%Y%m%d') #  '%Y-%m-%d')
 	delta = datetime.timedelta(days = numpre)
 	start_Date = end_Date - delta
-	#exchange  cal_date  is_open
 
-        tradays_df = pro.query('trade_cal', start_date=start_Date.strftime('%Y%m%d'), end_date=end_Date.strftime('%Y%m%d'))    # exchange  cal_date  is_open
-        for day_df in tradays_df:
-		if day_df['is_open'] is true:
-	        	list_tradays = day_df['cal_date'].tolist()                                         # datetime in list
-                	validays.append(day.strftime("%Y-%m-%d") )
+        days_df = pro.query('trade_cal', start_date=start_Date.strftime('%Y%m%d'), end_date=end_Date.strftime('%Y%m%d'))    # exchange  cal_date  is_open
+        #print("##### tradays_df:, day_df[is_open]: ", days_df, days_df['is_open'])
+	for i in range( numpre):
+		if (days_df['is_open']).ix[i] == 1:
+	        	valid_traday = (days_df['cal_date']).ix[i]                                         # datetime in list
+			validays.append(valid_traday.encode("utf-8") )
         return validays
 
 
@@ -127,10 +123,10 @@ def getTradeDays(end_date_str, num_prev):
 
 if __name__ ==  "__main__":
 	Login_TS("abc", "ddd")
-	kline = getKline("000001.SH","20190103", "20190120")
-	print ("Try to get market.. type_of_element, data:",  type(kline[0]), kline )
+	#kline = getKline("000001.SH","20190103", "20190120")
+	#print ("Try to get market.. type_of_element, data:",  type(kline[0]), kline )
 
 	print("---testing <getMarketMap>--- \n")
-	print( getMarketMap('20210210') )            #20190104
+	print( getMarketMap('20171107') )            # 20190104  now: 20210210
 	print("--- testing <getTradeDays>--- \n")
 	print( getTradeDays('20190105', '10')  )
