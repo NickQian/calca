@@ -62,7 +62,7 @@ var Print func(a ...interface{}) (n int, err error)  = fmt.Println
 
 
 func init(){
-        if logfile, err := os.OpenFile("../run.log",os.O_APPEND|os.O_CREATE, 666); err == nil{
+        if logfile, err := os.OpenFile(RUN_DIR+"run.log",os.O_APPEND|os.O_CREATE, 666); err == nil{
 	        Log = log.New(logfile, "", log.Ldate | log.Ltime)
 
         }else{
@@ -375,7 +375,7 @@ func Wr_Json_(jsonByte []byte, fn string)(err error){
 // output the data matrix for WeightEntropy
 func GetEigDm(fn string)(dm_eig [][]float64, suc bool){
 
-        eggs, _, suc := GetBtsData(FN_BOT_PUC_DATE)
+        eggs, _, suc := GetBtsData(fn)
         dm_eig = eggs2eig(eggs)
 
 	return dm_eig, suc
@@ -386,7 +386,7 @@ func GetEigDm(fn string)(dm_eig [][]float64, suc bool){
 
 /**********************************************************************************
 /*  1)qif get bot/top windows data.
-/*  2)average it and return map
+/*  2)average it and return map (also write the rec file and the avg data file)
 /**********************************************************************************/
 //func GetBtsData(fn_bt string)(eggs map[string]interface{}, A_evt []T_A, suc bool){
 func GetBtsData(fn_bt string)(eggs map[string](map[string]float64), A_evt []T_A, suc bool){
@@ -410,7 +410,9 @@ func GetBtsData(fn_bt string)(eggs map[string](map[string]float64), A_evt []T_A,
 
                         if len(dicmkt ) != 0{
                               //qif.FilDicToA(dicmkt, &a[(i_evt_valid)*lwsize + j_day_valid])
+                                A_evt[j_day_valid].EventType = day
                                 qif.FilDicToA(dicmkt, &A_evt[j_day_valid])
+                                fmt.Println("@@@@ A is:", A_evt )
                                 j_day_valid++;
                                 Print("#(4) i_evt_valid/j_day_valid are:",i_evt_valid, j_day_valid)
                         }
@@ -418,7 +420,7 @@ func GetBtsData(fn_bt string)(eggs map[string](map[string]float64), A_evt []T_A,
    			        egg_map = avgEvt(day, A_evt)        //eggmap map[string]interface{}
    			        eggAppend(&eggs, egg_map)
 				WriteEvtdata(i_evt, A_evt, egg_map )
-				Print("#(5) write done.")
+				Print("------#(5)#---- write done-----")
                         	break
                         }
                 } // end a event
@@ -503,8 +505,9 @@ func eggAppend(egg *map[string](map[string]float64), egg_in map[string](map[stri
 func avgEvt(dayStr string, a []T_A)(eggmap map[string](map[string]float64) ){ // eggmap map[string](map[string]float64) ){
 //func avgEvt(dayStr string, a []T_A)(eggmap map[string]interface{}){
 	pes_sh,   pes_sz,   pes_total   := []float64{}, []float64{}, []float64{}
-	volrs_sh, volrs_sz, volrs_total := []float64{}, []float64{}, []float64{}
-	mtsrs_sh, mtsrs_sz, mtsrs_total := []float64{}, []float64{}, []float64{}
+	pbs_sh,   pbs_sz,   pbs_total   := []float64{}, []float64{}, []float64{}
+	//volrs_sh, volrs_sz, volrs_total := []float64{}, []float64{}, []float64{}
+	//mtsrs_sh, mtsrs_sz, mtsrs_total := []float64{}, []float64{}, []float64{}
         //eggmap = make(map[string]interface{} )
 	eggmap = make(map[string](map[string]float64) )
 
@@ -514,7 +517,12 @@ func avgEvt(dayStr string, a []T_A)(eggmap map[string](map[string]float64) ){ //
 			pes_sh       = append(pes_sh,      a[i].Pe.Pe_sh)
 			pes_sz       = append(pes_sz,      a[i].Pe.Pe_sz)
 		}
-        	if a[i].Volr.Volr_sh != 0 && a[i].Volr.Volr_sz != 0{
+		if a[i].Pb.Pb_sh     != 0 &&  a[i].Pb.Pb_sz != 0{
+                        pbs_total    = append(pbs_total,   a[i].Pb.Pb_total)
+                        pbs_sh       = append(pbs_sh,      a[i].Pb.Pb_sh)
+                        pbs_sz       = append(pbs_sz,      a[i].Pb.Pb_sz)
+                }
+        	/*if a[i].Volr.Volr_sh != 0 && a[i].Volr.Volr_sz != 0{
                 	volrs_total  = append(volrs_total, a[i].Volr.Volr_total)
                 	volrs_sh     = append(volrs_sh,    a[i].Volr.Volr_sh)
                 	volrs_sz     = append(volrs_sz,    a[i].Volr.Volr_sz)
@@ -523,7 +531,7 @@ func avgEvt(dayStr string, a []T_A)(eggmap map[string](map[string]float64) ){ //
                 	mtsrs_total  = append(mtsrs_total, a[i].Mtsr.Mtsr_total)
                 	mtsrs_sh     = append(mtsrs_sh,    a[i].Mtsr.Mtsr_sh)
                 	mtsrs_sz     = append(mtsrs_sz,    a[i].Mtsr.Mtsr_sz)
-		}
+		}*/
 	}
         // ---------- prepare the map for wr & dm ----------------
 	//eggmap["day"] = dayStr
@@ -532,10 +540,14 @@ func avgEvt(dayStr string, a []T_A)(eggmap map[string](map[string]float64) ){ //
         pe_sh       := SimpleAvg(pes_sh)
 	pe_sz       := SimpleAvg(pes_sz)
 	pe_total    := SimpleAvg(pes_total)
-        //eggmap["pe"]   = []float64{pe_total,   pe_sh,   pe_sz}
         eggc["pe_total"], eggc["pe_sh"], eggc["pe_sz"] = pe_total,  pe_sh,   pe_sz
 
-        volr_total  := SimpleAvg(volrs_total)
+        pb_sh       := SimpleAvg(pbs_sh)
+        pb_sz       := SimpleAvg(pbs_sz)
+        pb_total    := SimpleAvg(pbs_total)
+        eggc["pb_total"], eggc["pb_sh"], eggc["pb_sz"] = pb_total,  pb_sh,   pb_sz
+
+        /*volr_total  := SimpleAvg(volrs_total)
         volr_sh     := SimpleAvg(volrs_sh)
         volr_sz     := SimpleAvg(volrs_sz)
         eggc["volr_total"], eggc["volr_sh"], eggc["volr_sz"] = volr_total, volr_sh, volr_sz
@@ -544,6 +556,7 @@ func avgEvt(dayStr string, a []T_A)(eggmap map[string](map[string]float64) ){ //
         mtsr_sh     := SimpleAvg(mtsrs_sh)
         mtsr_sz     := SimpleAvg(mtsrs_sz)
         eggc["mtsr_total"], eggc["mtsr_total"], eggc["mtsr_sz"] = mtsr_total, mtsr_sh, mtsr_sz
+	*/
 
 	eggmap[dayStr] = eggc
 
@@ -554,7 +567,7 @@ func avgEvt(dayStr string, a []T_A)(eggmap map[string](map[string]float64) ){ //
 // return all bottoms window date according the bottom record file in ../data/
 func GetBtsDate(fnbtdate string)(o [][]string){
         btsDate := ReadBtDate(fnbtdate)
-	fmt.Println("## botsDate:", btsDate)
+	fmt.Println("Info: botsDate are:", btsDate)
         for _, date := range btsDate{
                 bw := GetBtWindow(date)
                 if len(bw) !=0 {
@@ -576,7 +589,7 @@ func GetBtWindow(date string)(validTradeDays []string){
 }
 
 
-// doesn't use qif to get valid trade days
+// doesn't use qif to get valid trade days. don't use this.
 func GetBtWindow_raw(date string, prenum int)(bw []string){
         var lastdaytmp time.Time
 

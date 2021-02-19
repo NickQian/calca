@@ -41,9 +41,9 @@ type T_A struct{
 	EventType  string  `json:"evt_type"`    // "BOT_RLX"/"BOT_PUC"/"TOP_HOT"/"TOP_CRZ"
         Pe         T_pe	   `jason:"PE"`		// Market: PE
         Pb         T_pb	   `jason:"PB"` 	// Market: PB
-        Volr       T_volr  `jason:"VOLR"`       // Emo   : (trade vol)/Cmc ratio
         Tnr        T_tnr   `jason:"TNR"`        // Emo   : Tnr(daily)
-        Mtsr       T_mtsr  `jason:"MTSR"`       // Emo   : mtss/Cmc ratio.  only valid from 2014-05-05
+        //Mtsr       T_mtsr  `jason:"MTSR"`       // Emo   : mtss/Cmc ratio.  only valid from 2014-05-05
+        //Volr       T_volr  `jason:"VOLR"`       // Emo   : (trade vol)/Cmc ratio
         Cmc        T_cmc   `jason:"CMC"`        // circulation market value
 }
 
@@ -52,8 +52,9 @@ type T_cmc struct{
         Cmc_total  float64 `jason:"Cmc_total"`
         Cmc_sh     float64 `jason:"Cmc_sh"`
         Cmc_sz     float64 `jason:"Cmc_sz"`
-        Cmc_tim    float64 `jason:"Cmc_tim"`
+	Cmc_hs300  float64 `jason:"Cmc_hs300"`
         Cmc_gem    float64 `jason:"Cmc_gem"`
+        //Cmc_tim    float64 `jason:"Cmc_tim"`
 }
 
 
@@ -62,18 +63,27 @@ type T_pe struct{
         Pe_sh      float64 `jason:"Pe_sh"`
         Pe_sz      float64 `jason:"Pe_sz"`
         Pe_gem     float64 `jason:"Pe_gem"`
-        Pe_tim     float64 `jason:"Pe_tim"`           // 科创板
         Pe_hs300   float64 `jason:"Pe_hs300"`         // 沪深300
-        Pe_sh50    float64 `jason:"Pe_sh50"`
+        //Pe_sh50    float64 `jason:"Pe_sh50"`
+        //Pe_tim     float64 `jason:"Pe_tim"`           // 科创板
 }
 
 
 type T_pb struct{
         Pb_total   float64 `jason:"Pb_total"`
         Pb_hs300   float64 `jason:"Pb_hs300"`         // 沪深300
-        Pb_sh50    float64 `jason:"Pb_sh50"`
+        //Pb_sh50    float64 `jason:"Pb_sh50"`
         Pb_sh      float64 `jason:"Pb_sh"`
         Pb_sz      float64 `jason:"Pb_sz"`
+        Pb_gem     float64 `jason:"Pb_gem"`
+}
+
+type T_tnr struct{
+	Tnr_total  float64 `jason:"Tnr_total"`
+        Tnr_sh     float64 `jason:"Tnr_sh"`
+        Tnr_sz     float64 `jason:"Tnr_sz"`
+        Tnr_gem    float64 `jason:"Tnr_gem"`
+        Tnr_hs300  float64 `jason:"Tnr_hs300"`
 }
 
 
@@ -81,23 +91,19 @@ type T_mtsr struct{
         Mtsr_total float64 `jason:"Mtsr_total"`
         Mtsr_sh    float64 `jason:"Mtsr_sh"`
         Mtsr_sz    float64 `jason:"Mtsr_sz"`
+        Mtsr_hs300 float64 `jason:"Mtsr_hs300"`
+        Mtsr_gem   float64 `jason:"Mtsr_gem"`
 }
 
 
 type T_volr struct{
 	Volr_total float64 `jason:"Volr_total"`
-        Volr_gem   float64 `jason:"Volr_gem"`
         Volr_sh    float64 `jason:"Volr_sh"`
         Volr_sz    float64 `jason:"Volr_sz"`
+        Volr_hs300    float64 `jason:"Volr_sz"`
+        Volr_gem   float64 `jason:"Volr_gem"`
 }
 
-
-type T_tnr struct{
-	Tnr_total  float64 `jason:"Tnr_total"`
-        Tnr_sh     float64 `jason:"Tnr_sh"`
-        Tnr_sz     float64 `jason:"Tnr_sz"`
-        Tnr_gem    float64 `jason:"Tnr_gem"`
-}
 
 
 //------------------------ mipos data ------------------------------------------
@@ -147,8 +153,8 @@ const(
 	QIF_ACCESS_INTVL     = 100        // ms
 
 	FFT_FA_INTEREST_PTS  = 50
-	FFT_FLT_INTEREST_PTS = 10         // 10/15
-	FFT_FLT_PAD_LEN      = 0.2        // 0.2 * len
+	FFT_FLT_INTEREST_PTS = 20         // 10/15
+	FFT_FLT_PAD_LEN      = 0.0        // 0.2 * len
 )
 
 //----------------------- don't need modification --------------------------------------------
@@ -158,14 +164,18 @@ const(
 )
 
 
+
+
+const(  RUN_DIR = "/home/nk/calca/src/" )
+
 const(
-	FN_RUN_DATA        = "../data/run_data.json"
-        FN_RES_CALC        = "../data/res_calc.json"
-        Fn_RES_RRUN        = "../data/res_rrun.json"
-        FN_BOT_PUC_REC_DAT = "../data/his/hisEvtRecData.json"
-        FN_BOT_PUC_AVG_DAT = "../data/his/hisEvtAvgData.json"
-        FN_BOT_PUC_DATE    = "../data/man/botpunch_date"
-        FN_BOT_RLX_DATE    = "../data/man/botrelax_date"
-        FN_TOP_HOT_DATE    = "../data/man/tophot_date"
-        FN_BOT_CRZ_DATE    = "../data/man/topcrz_date"
+	FN_RUN_DATA        = RUN_DIR + "data/run_data.json"
+        FN_RES_CALC        = RUN_DIR + "data/res_calc.json"
+        Fn_RES_RRUN        = RUN_DIR + "data/res_rrun.json"
+        FN_BOT_PUC_REC_DAT = RUN_DIR + "data/his/hisEvtRecData.json"
+        FN_BOT_PUC_AVG_DAT = RUN_DIR + "data/his/hisEvtAvgData.json"
+        FN_DATE_BOT_PUC    = RUN_DIR + "data/man/botpunch_date"
+        FN_DATE_BOT_RLX    = RUN_DIR + "data/man/botrelax_date"
+        FN_DATE_TOP_HOT    = RUN_DIR + "data/man/tophot_date"
+        FN_DATE_TOP_CRZ    = RUN_DIR + "data/man/topcrz_date"
 )

@@ -46,9 +46,9 @@ type QIF struct{
 
 
 var (
-        ErrPasswd       = errors.New("ERR: qif- password or user name not correct \n")
-        ErrNoDataReturn = errors.New("ERR: qif- no data return from this qif \n")
-        ErrNoItem       = errors.New("ERR: qif- there's no this item in qif  \n")
+        ErrPasswd       = errors.New("ERR: <qif>- password or user name not correct \n")
+        ErrNoDataReturn = errors.New("ERR: <qif>- no data return from this qif \n")
+        ErrNoItem       = errors.New("ERR: <qif>- there's no this item in qif  \n")
 )
 
 
@@ -70,7 +70,6 @@ var PyModule *python.PyObject
 //------------------------ func实现 ------------------------------------
 func GetKline(indexType, dayStart, dayEnd string)(kline []float64){
 	_, I_kline, _ := goCallpy("getKline", indexType, dayStart, dayEnd)
-	fmt.Printf("type of I: %T \n", I_kline)
 	//if klineStr, ok := I_kline.([]string); ok{
 	if len(I_kline) > 0{
 		for _, v := range I_kline{
@@ -85,7 +84,7 @@ func GetKline(indexType, dayStart, dayEnd string)(kline []float64){
 }
 
 // use <GetMarket> to update "Today" info
-func  MarketUpdate(a *T_A) (suc bool){
+func MarketUpdate(a *T_A) (suc bool){
         resDic := GetMarket(Today)
         if len(resDic) == 0{
         	fmt.Println("Error: <MarketUpdate> result is empty. Maybe internet access problem or not trade day.")
@@ -96,6 +95,7 @@ func  MarketUpdate(a *T_A) (suc bool){
 	return true
 }
 
+
 // Get One day market info, eg. PB, PE, Volr
 func GetMarket(day string)(dicmkt map[string]float64){
 	dicmkt = make(map[string]float64)
@@ -103,6 +103,7 @@ func GetMarket(day string)(dicmkt map[string]float64){
         if len(dicmkt) == 0{
 		fmt.Println("Error: <GetMarket> result dicmkt is empty. Maybe internet problem or not trade day. ")
         }
+        fmt.Printf("Info: <qif.go> --> <GetMarket> dicmkt: %v   \n ", dicmkt)
 	return 	dicmkt
 }
 
@@ -115,15 +116,16 @@ func FilDicToA(dicmkt map[string]float64, a *T_A)(bool){
         	a.Pe.Pe_sh,   a.Pe.Pe_sz,   a.Pe.Pe_gem   = dicmkt["pe_sh"],  dicmkt["pe_sz"],  dicmkt["pe_szm"]
 		a.Pe.Pe_total = a.Pe.Pe_sh * (a.Cmc.Cmc_sh/a.Cmc.Cmc_total) + a.Pe.Pe_sz * (a.Cmc.Cmc_sz/a.Cmc.Cmc_total)
 
-	        a.Tnr.Tnr_sh, a.Tnr.Tnr_sz = dicmkt["tnr_sh"], dicmkt["pe_sz"]
+	        a.Tnr.Tnr_sh, a.Tnr.Tnr_sz = dicmkt["tnr_sh"], dicmkt["tnr_sz"]
 
-        	vol_sh,  vol_sz,  vol_gem := dicmkt["vol_sh"], dicmkt["vol_sz"], dicmkt["vol_gem"]
-		a.Volr.Volr_total = 100*(vol_sh + vol_sz)/a.Cmc.Cmc_total
-		a.Volr.Volr_gem, a.Volr.Volr_sh, a.Volr.Volr_sz = 100*vol_gem/a.Cmc.Cmc_gem, 100*vol_sh/a.Cmc.Cmc_sh, 100*vol_sz/a.Cmc.Cmc_sz
+        	//vol_sh,  vol_sz,  vol_gem := dicmkt["vol_sh"], dicmkt["vol_sz"], dicmkt["vol_gem"]
+		//a.Volr.Volr_total = 100*(vol_sh + vol_sz)/a.Cmc.Cmc_total
+		//a.Volr.Volr_gem, a.Volr.Volr_sh, a.Volr.Volr_sz = 100*vol_gem/a.Cmc.Cmc_gem, 100*vol_sh/a.Cmc.Cmc_sh, 100*vol_sz/a.Cmc.Cmc_sz
 
-		mtss_sh, mtss_sz := dicmkt["mtss_sh"], dicmkt["mtss_sz"]
-        	a.Mtsr.Mtsr_total = 100*(mtss_sh + mtss_sz)/a.Cmc.Cmc_total
-        	a.Mtsr.Mtsr_sh, a.Mtsr.Mtsr_sz = 100*mtss_sh/a.Cmc.Cmc_sh, 100*mtss_sz/a.Cmc.Cmc_sz
+		//mtss_sh, mtss_sz := dicmkt["mtss_sh"], dicmkt["mtss_sz"]
+        	//a.Mtsr.Mtsr_total = 100*(mtss_sh + mtss_sz)/a.Cmc.Cmc_total
+        	//a.Mtsr.Mtsr_sh, a.Mtsr.Mtsr_sz = 100*mtss_sh/a.Cmc.Cmc_sh, 100*mtss_sz/a.Cmc.Cmc_sz
+
 		return true
 	}
 	return false
@@ -135,7 +137,7 @@ func GetTradeDays(date string)(days []string){
 	//if days, ok := I_days.([]string); ok{
 	if len(I_days) > 0{
 		days = I_days
-	        fmt.Print("===> GetTradeDays:", days)
+	        fmt.Print("Info: <qif.go> -> <GetTradeDays>:", days)
 	}else{
 		fmt.Print(ErrNoDataReturn)
 	}
@@ -294,7 +296,7 @@ func ListResExtract(listIn *python.PyObject)(oslice []string){
 }
 
 
-// ----------------- operate with python api ---------------------
+// -------------------- operate with python api ------------------------------------------
 
 func init(){
         todayFull := now.Format(TIME_LAYOUT_STR)
@@ -318,6 +320,8 @@ func QifLogin( )(suc bool){
         }
       return suc
 }
+
+
 
 //----------------- daughter funcs ---------------------
 

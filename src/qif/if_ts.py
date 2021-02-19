@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-""" Tushare(聚宽)的JQData的python接口.   www.joinquant.com/data
+""" Tushare的python接口.   https://waditu.com/
 #  ----
 #  License: BSD
 #  ----
@@ -38,18 +38,17 @@ def getKline(index, startDay, endDay):
 
 
 
-
 #-------- Market property ------------------------
 """ts_code trade_date total_mv(总市值) float_mv(流通市值）total_share float_share free_share turnover_rate turnover_rate_f pe  pe_ttm  pb
 0   000001.SH * 20190104  3.219598e+13  2.338122e+13  4.500358e+12  ...           0.51             1.32  12.04   11.08  1.25
 1   000005.SH   20190104  1.481860e+12  7.004018e+11  1.738149e+11  ...           1.75             2.52  14.52   13.70  1.34
 2   000006.SH   地产指数[000006]实时行情_东方财富
 3   000016.SH   (sh50)
-4   000300.SH * (hs300)
+4   000300.SH * (hs300) : from 2005
 5   000905.SH   (zz500)
 6   399001.SZ * (sz 001)
 7   399005.SZ   (中小板指)
-8   399006.SZ * (创业板指)
+8   399006.SZ * (创业板指) : from 2010
 9   399016.SZ   (深证创新)
 10  399300.SZ   (sz hs300)
 11  399905.SZ   (中证500 )
@@ -58,53 +57,70 @@ def getKline(index, startDay, endDay):
 # eg. date='20181018'
 def getMarketMap(day):
         df = getMarket(day)
-        #print ("----pdf is:---", pdf)
-        if df.empty:
+	pe_sh,  pe_sz,  pe_hs300,  pe_gem  = None, None, None, None
+	tnr_sh, tnr_sz, tnr_hs300, tnr_gem = None, None, None, None
+        pb_sh,  pb_sz,  pb_hs300,  pb_gem  = None, None, None, None
+        cmc_sh, cmc_sz, cmc_hs300, cmc_gem = None, None, None, None
+	if df.empty:
                 print("pyInfo: Err: <getMarket> result is empty! ")
                 return {}
         else:
-                pe_sh    = (df.loc[df['ts_code']=='000001.SH', 'pe']).values.tolist()[0] #[0] is just the row index of returned data series
-		pe_sh300 = (df.loc[df['ts_code']=='000300.SH', 'pe']).values.tolist()[0]
+	    try:
+                pe_sh    = (df.loc[df['ts_code']=='000001.SH', 'pe']).values.tolist()[0]
+                tnr_sh   = (df.loc[df['ts_code']=='000001.SH', 'turnover_rate_f']).values.tolist()[0]
+		pb_sh    = (df.loc[df['ts_code']=='000001.SH', 'pb']).values.tolist()[0]
+		cmc_sh   = (df.loc[df['ts_code']=='000001.SH', 'float_mv']).values.tolist()[0]   #cmc: circulating_market_capacity
+
 		pe_sz    = (df.loc[df['ts_code']=='399001.SZ', 'pe']).values.tolist()[0]
-                pe_gem   = (df.loc[df['ts_code']=='399006.SZ', 'pe']).values.tolist()[0]
-
-                tnr_sh    = (df.loc[df['ts_code']=='000001.SH', 'turnover_rate_f']).values.tolist()[0]
-                tnr_sh300 = (df.loc[df['ts_code']=='000300.SH', 'turnover_rate_f']).values.tolist()[0]
-		tnr_sz    = (df.loc[df['ts_code']=='399001.SZ', 'turnover_rate_f']).values.tolist()[0]
-		tnr_gem   = (df.loc[df['ts_code']=='399006.SZ', 'turnover_rate_f']).values.tolist()[0]
-
-		pb_sh    = (df.loc[df['ts_code']=='000001.SH', 'pb']).values.tolist()[0] #[0] is just the row index of returned data series
-                pb_sh300 = (df.loc[df['ts_code']=='000300.SH', 'pb']).values.tolist()[0]
+		tnr_sz   = (df.loc[df['ts_code']=='399001.SZ', 'turnover_rate_f']).values.tolist()[0]
                 pb_sz    = (df.loc[df['ts_code']=='399001.SZ', 'pb']).values.tolist()[0]
+                cmc_sz   = (df.loc[df['ts_code']=='399001.SZ', 'float_mv']).values.tolist()[0]
+
+		pe_hs300 = (df.loc[df['ts_code']=='000300.SH', 'pe']).values.tolist()[0]
+                tnr_hs300= (df.loc[df['ts_code']=='000300.SH', 'turnover_rate_f']).values.tolist()[0]
+                pb_hs300 = (df.loc[df['ts_code']=='000300.SH', 'pb']).values.tolist()[0]
+	        cmc_hs300= (df.loc[df['ts_code']=='000300.SH', 'float_mv']).values.tolist()[0]
+
+                pe_gem   = (df.loc[df['ts_code']=='399006.SZ', 'pe']).values.tolist()[0]
+		tnr_gem  = (df.loc[df['ts_code']=='399006.SZ', 'turnover_rate_f']).values.tolist()[0]
                 pb_gem   = (df.loc[df['ts_code']=='399006.SZ', 'pb']).values.tolist()[0]
+		cmc_gem  = (df.loc[df['ts_code']=='399006.SZ', 'float_mv']).values.tolist()[0]
 
                 #vol_sh  = pdf[2:3]['money'][2]
                 #mtss_sh, mtss_sz = getMtss(day)
-                #cmc_sha = pdf[0:1]['circulating_market_cap'][0]
 
-                return  { 'pe_sh' :pe_sh,  'pe_sh300' :pe_sh300,   'pe_sz' :pe_sz,  'pe_gem' :pe_gem,
-                          'tnr_sh':tnr_sh, 'tnr_sh300':tnr_sh300,  'tnr_sz':tnr_sz, 'tnr_gem':tnr_gem,
-                          'pb_sh' :pe_sh,  'pb_sh300' :pe_sh300,   'pb_sz' :pe_sz,  'pb_gem' :pe_gem,
-			 # 'cmc_sh':cmc_sh,'cmc_szm':cmc_szm,'cmc_sz':cmc_sz,'cmc_gem':cmc_gem,
+	    except: # IndexError:  UnboundLocalError
+	    	print("@Python Warning: day to query may has no hs300<000300> or <399006>.")
+		return  { 'pe_sh' :pe_sh,  'pe_sz' :pe_sz,
+                          'tnr_sh':tnr_sh, 'tnr_sz':tnr_sz,
+                          'pb_sh' :pb_sh,  'pb_sz' :pb_sz,
+                        }
+
+	    else:
+                return  { 'pe_sh' : pe_sh, 'pe_hs300' : pe_hs300,  'pe_sz' : pe_sz, 'pe_gem' : pe_gem,
+                          'tnr_sh':tnr_sh, 'tnr_hs300':tnr_hs300,  'tnr_sz':tnr_sz, 'tnr_gem':tnr_gem,
+                          'pb_sh' : pb_sh, 'pb_hs300' : pb_hs300,  'pb_sz' : pb_sz, 'pb_gem' : pb_gem,
+			  'cmc_sh':cmc_sh, 'cmc_hs300':cmc_hs300,  'cmc_sz':cmc_sz,'cmc_gem': cmc_gem,
                          # 'vol_sh':vol_sh,'vol_szm':vol_szm,'vol_sz':vol_sz,'vol_gem':vol_gem,
                          # 'mtss_sh':mtss_sh,'mtss_sz':mtss_sz,
                         }
 
 
 
-
 # eg. date='20181018'
+# ts: only valid from 20040105??
 def getMarket(date):
 	df = pro.index_dailybasic(trade_date= date)               # , fields='ts_code,trade_date,turnover_rate,pe')
-	print("###df:", df)
+	print("#df:", df)
 	return df
 
 
 #------------------------ Trade days -----------------------------------
+# input eg: (2014-06-13, 10)
 def getTradeDays(end_date_str, num_prev):
         validays   = []
         numpre     = int(num_prev)
-        end_Date   = datetime.datetime.strptime(end_date_str, '%Y%m%d') #  '%Y-%m-%d')
+        end_Date   = datetime.datetime.strptime(end_date_str, '%Y-%m-%d') #  '%Y-%m-%d')
 	delta = datetime.timedelta(days = numpre)
 	start_Date = end_Date - delta
 
@@ -127,6 +143,6 @@ if __name__ ==  "__main__":
 	#print ("Try to get market.. type_of_element, data:",  type(kline[0]), kline )
 
 	print("---testing <getMarketMap>--- \n")
-	print( getMarketMap('20171107') )            # 20190104  now: 20210210
+	print( getMarketMap('20140609') )   #20140609 20140610 20140611 20140612]            # 20040105 --> 20190104  now: 20210210
 	print("--- testing <getTradeDays>--- \n")
-	print( getTradeDays('20190105', '10')  )
+	print( getTradeDays('2019-01-05', '10')  )

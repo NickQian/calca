@@ -1,50 +1,49 @@
-/*********************************************************
-/* fetch data from qif, update model parameter
+/**************************************************************
+/* fetch data from qif, update model parameter("calca" to the updating current status )
+/* collect history data/characters.
 /* ----
 /*  License: BSD
 /* ----
 /* v0.1  . --- 2019.10.21
-/*********************************************************/
+/**************************************************************/
+
+package main
+
 
 import (
 	. "cmn"
 	"fmt"
+	dfn "define"
 )
 
 
 
-func UpdateCW_Model()(){
-        modelCfg := Mipos_Model()
-
+func UpdateCW_Model()(bool){
+        //modelCfg := Mipos_Model()
+	return true
 }
 
 
-// calculate today postion & scan
-func CalcaToday()(bi, ti int, mix_cw float64){
-	//(1) current position
-        bot_relax, bot_punch, top_hot, top_crazy = Mipos(policy="A", todayA= &dfn.T_A)
-                // mix_cw: model mix of (Casino) - (weighing machine)
-
-	//(2) scan
-        sug := Scan()
-        if err = WriteRes(res){
-        	Log.Println(err)
-        }
+// distill current event character
+func DistilEvt(fn_date string) bool{
+	eggs, _, suc := GetBtsData(fn_date)
+	fmt.Print("info: <DistilEvt> : eggs: ", eggs)
+	return suc
 }
 
 
 // see if there's new b/t event
 func HasBtEvent()(botEvt bool, topEvt bool){
-	rundata, _ := ReadRunData(FN_RUN_DATA)
+	rundata, _ := ReadRunData(dfn.FN_RUN_DATA)
 
-	Bot_Rlx := ReadBtDate(FN_BOT_RLX_DATE)
+	Bot_Rlx := ReadBtDate(dfn.FN_DATE_BOT_RLX)
 	lastBotRlxDate := Bot_Rlx[0]
-	Bot_Puc := ReadBtDate(FN_BOT_PUC_DATE)
+	Bot_Puc := ReadBtDate(dfn.FN_DATE_BOT_PUC)
 	lastBotPucDate := Bot_Puc[0]
 
-	Top_Hot := ReadBtDate(FN_TOP_HOT_DATE)
+	Top_Hot := ReadBtDate(dfn.FN_DATE_TOP_HOT)
 	lastTopHotDate := Top_Hot[0]
-	Top_Crz := ReadBtDate(FN_TOP_CZR_DATE)
+	Top_Crz := ReadBtDate(dfn.FN_DATE_TOP_CRZ)
 	lastTopCrzDate := Top_Crz[0]
 
 	if rundata.LastBotDate == lastBotRlxDate || rundata.LastBotDate == lastBotPucDate{
