@@ -111,20 +111,26 @@ func GetMarket(day string)(dicmkt map[string]float64){
 func FilDicToA(dicmkt map[string]float64, a *T_A)(bool){
         if len(dicmkt) >0 {
 	        a.Cmc.Cmc_sh, a.Cmc.Cmc_sz, a.Cmc.Cmc_gem = dicmkt["cmc_sh"], dicmkt["cmc_sz"], dicmkt["cmc_gem"]
+	        // Note: Cmc_sz include Cmc_gem
         	a.Cmc.Cmc_total = a.Cmc.Cmc_sh + a.Cmc.Cmc_sz
+        	wei_sh, wei_sz := a.Cmc.Cmc_sh/a.Cmc.Cmc_total, a.Cmc.Cmc_sz/a.Cmc.Cmc_total
 
-        	a.Pe.Pe_sh,   a.Pe.Pe_sz,   a.Pe.Pe_gem   = dicmkt["pe_sh"],  dicmkt["pe_sz"],  dicmkt["pe_szm"]
-		a.Pe.Pe_total = a.Pe.Pe_sh * (a.Cmc.Cmc_sh/a.Cmc.Cmc_total) + a.Pe.Pe_sz * (a.Cmc.Cmc_sz/a.Cmc.Cmc_total)
+        	a.Pe.Pe_sh,   a.Pe.Pe_sz,  a.Pe.Pe_hs300,  a.Pe.Pe_gem   = dicmkt["pe_sh"], dicmkt["pe_sz"], dicmkt["pe_hs300"], dicmkt[ "pe_gem"]
+		a.Pe.Pe_total   = a.Pe.Pe_sh  *  wei_sh +  a.Pe.Pe_sz  *  wei_sz
 
-	        a.Tnr.Tnr_sh, a.Tnr.Tnr_sz = dicmkt["tnr_sh"], dicmkt["tnr_sz"]
+        	a.Pb.Pb_sh,   a.Pb.Pb_sz, a.Pb.Pb_hs300,   a.Pb.Pb_gem    = dicmkt["pb_sh"],dicmkt["pb_sz"], dicmkt["pb_hs300"], dicmkt[ "pb_gem"]
+		a.Pb.Pb_total   = a.Pb.Pb_sh  *  wei_sh +  a.Pb.Pb_sz  *  wei_sz
 
-        	//vol_sh,  vol_sz,  vol_gem := dicmkt["vol_sh"], dicmkt["vol_sz"], dicmkt["vol_gem"]
-		//a.Volr.Volr_total = 100*(vol_sh + vol_sz)/a.Cmc.Cmc_total
-		//a.Volr.Volr_gem, a.Volr.Volr_sh, a.Volr.Volr_sz = 100*vol_gem/a.Cmc.Cmc_gem, 100*vol_sh/a.Cmc.Cmc_sh, 100*vol_sz/a.Cmc.Cmc_sz
+	        a.Tnr.Tnr_sh, a.Tnr.Tnr_sz,a.Tnr.Tnr_hs300,a.Tnr.Tnr_gem = dicmkt["tnr_sh"],dicmkt["tnr_sz"],dicmkt["tnr_hs300"], dicmkt["tnr_gem"]
+		a.Tnr.Tnr_total = a.Tnr.Tnr_sh * wei_sh +  a.Tnr.Tnr_sz * wei_sz
 
 		//mtss_sh, mtss_sz := dicmkt["mtss_sh"], dicmkt["mtss_sz"]
         	//a.Mtsr.Mtsr_total = 100*(mtss_sh + mtss_sz)/a.Cmc.Cmc_total
         	//a.Mtsr.Mtsr_sh, a.Mtsr.Mtsr_sz = 100*mtss_sh/a.Cmc.Cmc_sh, 100*mtss_sz/a.Cmc.Cmc_sz
+
+        	//vol_sh,  vol_sz,  vol_gem := dicmkt["vol_sh"], dicmkt["vol_sz"], dicmkt["vol_gem"]
+		//a.Volr.Volr_total = 100*(vol_sh + vol_sz)/a.Cmc.Cmc_total
+		//a.Volr.Volr_gem, a.Volr.Volr_sh, a.Volr.Volr_sz = 100*vol_gem/a.Cmc.Cmc_gem, 100*vol_sh/a.Cmc.Cmc_sh, 100*vol_sz/a.Cmc.Cmc_sz
 
 		return true
 	}

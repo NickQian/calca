@@ -270,7 +270,8 @@ func JsonExtr_RrunRes(rrunResIf map[string]interface{})(rrunRes T_SimRes){ // as
 /****************************************************************************************/
 //func WriteEvtdata(i_evt int, A_evt []T_A, eggMap map[string]interface{} )(  ){
 func WriteEvtdata(i_evt int, A_evt []T_A, eggMap map[string](map[string]float64) )(  ){
-      	if i_evt > 0{
+	fmt.Println("===> <WriteEvtdata>:  A_evt, eggMap:",  A_evt, eggMap) 
+	if i_evt > 0{
       		WriteEvtWins(A_evt, FN_BOT_PUC_REC_DAT, true)      // if not first event, append
 		WriteEvtAvg(eggMap, FN_BOT_PUC_AVG_DAT, true)
 	}else{
@@ -325,7 +326,7 @@ func mapToJson(m map[string](map[string]float64) )(jsonBytes []byte, err error){
 	if jsonBytes, err = json.MarshalIndent(m, "", "\t"); err == nil{        //func MarshalIndent(v interface{}, prefix, indent string)([]byte, error)
 	        fmt.Println("map转json成功")
 	}else{
-	        Print("ERROR: map to Json 出错.")
+	        Print("ERROR: map to Json 出错:", err)
 	}
 	return
 }
@@ -397,7 +398,6 @@ func GetBtsData(fn_bt string)(eggs map[string](map[string]float64), A_evt []T_A,
         eggs = make( map[string](map[string]float64) )
 
         btsdate := GetBtsDate(fn_bt)
-	fmt.Println("#(2): btsdate:", btsdate)
 
 	i_evt_valid, j_day_valid := 0, 0
 	lwsize := 0                                   // last valid window size
@@ -412,7 +412,7 @@ func GetBtsData(fn_bt string)(eggs map[string](map[string]float64), A_evt []T_A,
                               //qif.FilDicToA(dicmkt, &a[(i_evt_valid)*lwsize + j_day_valid])
                                 A_evt[j_day_valid].EventType = day
                                 qif.FilDicToA(dicmkt, &A_evt[j_day_valid])
-                                fmt.Println("@@@@ A is:", A_evt )
+                                //fmt.Println("@@@@ A is:", A_evt )
                                 j_day_valid++;
                                 Print("#(4) i_evt_valid/j_day_valid are:",i_evt_valid, j_day_valid)
                         }
@@ -503,11 +503,12 @@ func eggAppend(egg *map[string](map[string]float64), egg_in map[string](map[stri
 // eggmap: map[ ["day"]: "2019-01-05"
 //              ["item"]: [map[pe] : 14.2 ]
 func avgEvt(dayStr string, a []T_A)(eggmap map[string](map[string]float64) ){ // eggmap map[string](map[string]float64) ){
-//func avgEvt(dayStr string, a []T_A)(eggmap map[string]interface{}){
 	pes_sh,   pes_sz,   pes_total   := []float64{}, []float64{}, []float64{}
 	pbs_sh,   pbs_sz,   pbs_total   := []float64{}, []float64{}, []float64{}
-	//volrs_sh, volrs_sz, volrs_total := []float64{}, []float64{}, []float64{}
+	tnrs_sh,  tnrs_sz,  tnrs_total  := []float64{}, []float64{}, []float64{}
 	//mtsrs_sh, mtsrs_sz, mtsrs_total := []float64{}, []float64{}, []float64{}
+	//volrs_sh, volrs_sz, volrs_total := []float64{}, []float64{}, []float64{}
+
         //eggmap = make(map[string]interface{} )
 	eggmap = make(map[string](map[string]float64) )
 
@@ -522,15 +523,22 @@ func avgEvt(dayStr string, a []T_A)(eggmap map[string](map[string]float64) ){ //
                         pbs_sh       = append(pbs_sh,      a[i].Pb.Pb_sh)
                         pbs_sz       = append(pbs_sz,      a[i].Pb.Pb_sz)
                 }
-        	/*if a[i].Volr.Volr_sh != 0 && a[i].Volr.Volr_sz != 0{
-                	volrs_total  = append(volrs_total, a[i].Volr.Volr_total)
-                	volrs_sh     = append(volrs_sh,    a[i].Volr.Volr_sh)
-                	volrs_sz     = append(volrs_sz,    a[i].Volr.Volr_sz)
-		}
+                if a[i].Tnr.Tnr_sh   != 0 &&  a[i].Tnr.Tnr_sz != 0{
+                        tnrs_total   = append(tnrs_total,  a[i].Tnr.Tnr_total)
+                        tnrs_sh      = append(tnrs_sh,     a[i].Tnr.Tnr_sh)
+                        tnrs_sz      = append(tnrs_sz,     a[i].Tnr.Tnr_sz)
+                }
+        	/*
         	if a[i].Mtsr.Mtsr_sh != 0 && a[i].Mtsr.Mtsr_sz != 0{
                 	mtsrs_total  = append(mtsrs_total, a[i].Mtsr.Mtsr_total)
                 	mtsrs_sh     = append(mtsrs_sh,    a[i].Mtsr.Mtsr_sh)
                 	mtsrs_sz     = append(mtsrs_sz,    a[i].Mtsr.Mtsr_sz)
+
+		if a[i].Volr.Volr_sh != 0 && a[i].Volr.Volr_sz != 0{
+                	volrs_total  = append(volrs_total, a[i].Volr.Volr_total)
+                	volrs_sh     = append(volrs_sh,    a[i].Volr.Volr_sh)
+                	volrs_sz     = append(volrs_sz,    a[i].Volr.Volr_sz)
+		}
 		}*/
 	}
         // ---------- prepare the map for wr & dm ----------------
@@ -546,6 +554,11 @@ func avgEvt(dayStr string, a []T_A)(eggmap map[string](map[string]float64) ){ //
         pb_sz       := SimpleAvg(pbs_sz)
         pb_total    := SimpleAvg(pbs_total)
         eggc["pb_total"], eggc["pb_sh"], eggc["pb_sz"] = pb_total,  pb_sh,   pb_sz
+
+        tnr_sh      := SimpleAvg(tnrs_sh)
+        tnr_sz      := SimpleAvg(tnrs_sz)
+        tnr_total   := SimpleAvg(tnrs_total)
+        eggc["tnr_total"], eggc["tnr_sh"], eggc["tnr_sz"] = tnr_total, tnr_sh, tnr_sz
 
         /*volr_total  := SimpleAvg(volrs_total)
         volr_sh     := SimpleAvg(volrs_sh)

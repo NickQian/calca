@@ -136,7 +136,7 @@ type T_ErrCalca struct{
 //------------------------ configuration parameters ------------------------------------------
 const(
         // JQ == JoinQuant) | UQ == Uqer.io | RQ == RiceQuant | BQ == BigQuant | TS == tushare
-        QIF_VENDOR         = "TS"
+        QIF_VENDOR         = "JQ"
 )
 
 
