@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-"""
-# JoinQuant(聚宽)的JQData的python接口.   www.joinquant.com/data
+"""# JoinQuant(聚宽)的JQData的python接口.   www.joinquant.com/data
 #  ----
 #  License: BSD
 #  ----
-#  0.1: init version - 2019.2 - Nick cKing
+#  0.2: with jqdatasdk-1.8.7. Has data from 2005                  - 2021.2
+#  0.1: init version(jqdatasdk-1.6.5). Only has data from 2009??  - 2019.2 - Nick cKing. 
 """
+
 
 import datetime
 import jqdatasdk as jq
@@ -16,14 +17,14 @@ import pandas as pd
 from sqlalchemy import Integer, Column, create_engine, ForeignKey
 from sqlalchemy.orm import relationship, joinedload, subqueryload, Session
 
-import logging
-
-logging.basicConfig(filename='./pyinfo.log', format='[%(asctime)s-%(filename)s-%(levelname)s:%(message)s]',level=logging.DEBUG, filemode='a', detefmt='%Y-%m-%d%I:%M:%S %p')
+"""old version login"""
+#import logging
+#logging.basicConfig(filename='./pyinfo.log', format='[%(asctime)s-%(filename)s-%(levelname)s:%(message)s]',level=logging.DEBUG, filemode='a', detefmt='%Y-%m-%d%I:%M:%S %p')
 
 def Login_JQ(username,password):
 	print ("PyInfo: JQ login ing....... \n")
 	suc = False
-    	try:
+	try:
 		JQLoginRes = jq.auth(username, password)
 		print ("PyInfo: JQLoginRes:", JQLoginRes)
 		logging.info("Pyinfo:Login_JQ success.")
@@ -38,7 +39,12 @@ def Login_JQ(username,password):
 
 def getMarketMap(day):
 	pdf = getMarket(day)
-	#print ("----pdf is:---", pdf)
+	print ("----pdf is:---", pdf)
+	pe_sha,  pe_sh,  pe_sz,  pe_gem,  pe_szm  = None, None, None, None, None
+	pb_sha,  pb_sh,  pb_sz,  pb_gem,  pb_szm  = None, None, None, None, None
+	tnr_sha, tnr_sh, tnr_sz, tnr_gem, tnr_szm = None, None, None, None, None
+	cmc_sha, cmc_sh, cmc_sz, cmc_gem,  pb_szm  = None, None, None, None, None
+
 	if pdf.empty:
 		print("pyInfo: Err: <getMarket> result is empty! ")
 		return {}
@@ -58,17 +64,18 @@ def getMarketMap(day):
 		cmc_szm = pdf[4:5]['circulating_market_cap'][4]
 		cmc_sz  = pdf[5:6]['circulating_market_cap'][5]
 		cmc_gem = pdf[6:7]['circulating_market_cap'][6]
-		vol_sha = pdf[0:1]['money'][0]
-        	vol_sh  = pdf[2:3]['money'][2]
-        	vol_szm = pdf[4:5]['money'][4]
-        	vol_sz  = pdf[5:6]['money'][5]
-        	vol_gem = pdf[6:7]['money'][6]
+		#vol_sha = pdf[0:1]['money'][0]
+		#vol_sh  = pdf[2:3]['money'][2]
+		#vol_szm = pdf[4:5]['money'][4]
+		#vol_sz  = pdf[5:6]['money'][5]
+		#vol_gem = pdf[6:7]['money'][6]
 		mtss_sh, mtss_sz = getMtss(day)
-        	return  {'pe_sha':pe_sha,  'pe_sh':pe_sh,  'pe_szm':pe_szm,  'pe_sz':pe_sz,  'pe_gem':pe_gem,
-        		 'tnr_sha':tnr_sha,'tnr_sh':tnr_sh,'tnr_szm':tnr_szm,'tnr_sz':tnr_sz,'tnr_gem':tnr_gem,
-        	  	 'cmc_sha':cmc_sha,'cmc_sh':cmc_sh,'cmc_szm':cmc_szm,'cmc_sz':cmc_sz,'cmc_gem':cmc_gem,
-        	  	 'vol_sha':vol_sha,'vol_sh':vol_sh,'vol_szm':vol_szm,'vol_sz':vol_sz,'vol_gem':vol_gem,
+		return  {'pe_sha':pe_sha,  'pe_sh':pe_sh,    'pe_szm':pe_szm,   'pe_sz':pe_sz,   'pe_gem':pe_gem,
+        	         'pb_sha':pb_sha,  'pb_sh':pb_sh,    'pb_szm':pb_szm,   'pb_sz':pb_sz,   'pe_gem':pb_gem,
+        		 'tnr_sha':tnr_sha,'tnr_sh':tnr_sh,  'tnr_szm':tnr_szm, 'tnr_sz':tnr_sz, 'tnr_gem':tnr_gem,
+        	  	 'cmc_sha':cmc_sha,'cmc_sh':cmc_sh,  'cmc_szm':cmc_szm, 'cmc_sz':cmc_sz, 'cmc_gem':cmc_gem,
         	  	 'mtss_sh':mtss_sh,'mtss_sz':mtss_sz,
+        	  	 #'vol_sha':vol_sha,'vol_sh':vol_sh,'vol_szm':vol_szm,'vol_sz':vol_sz,'vol_gem':vol_gem,
         		}
 
 
@@ -133,9 +140,9 @@ def getTradeDays(dateStr, num_prev):
 	return validays
 
 #----------------------------- single -----------------------------------
-
-
 # get today price
+"""get_price 与 get_fundamentals_continuously 接口 panel 参数将固定为 False
+注意：0.25 以上版本 pandas 不支持 panel，如使用该数据结构和相关函数请注意修改"""
 def getSinglePrice(code):
     today = time.strftime('%Y-%m-%d', time.localtime(time.time()))
     return jq.get_price(code, start_date= today, end_date= today, fields=['open','close'] )
@@ -147,8 +154,7 @@ def getSingleMtss(code, date):
 
 
 
-"""
-#--- 公司财务数据 ---
+"""#--- 公司财务数据 ---
 #获取单季度/年度财务数据
 get_fundamentals(query(
             #下一行为估值指标，包括代码、市值、pe、pb、ps、pcf，可自由添加其它指标
@@ -183,9 +189,9 @@ get_fundamentals(query(
 def getMarket(date):
     pdf =jq.finance.run_query(      # type(l): pandas.core.frame.DataFrame
                               jq.query(jq.finance.STK_EXCHANGE_TRADE_INFO)       # type: sqlalchemy.orm.query.Query
-                              .filter(jq.finance.STK_EXCHANGE_TRADE_INFO.date==date)
-                              .limit(30)
+                              .filter(jq.finance.STK_EXCHANGE_TRADE_INFO.date==date).limit(30)
                               )
+    print(pdf)
     return pdf
 
 
@@ -239,11 +245,12 @@ def getZz500():  # 中证500
 
 if __name__ == "__main__":
 	print ("User Name Login Result:", Login_JQ("18602122079", "calcaapi"))
-	print ("Try to get 2019.9.13 market data:", getMarketMap("2019-09-11") )
-	days = getTradeDays(dateStr="2019-09-11", num_prev = "10")
 
+	print ("Try to get 2019.9.13 market data:", getMarketMap("2004-01-10") )        #2003-01-10   2019-09-11
+
+	days = getTradeDays(dateStr="2019-09-11", num_prev = "10")
 	print ("Try to get 2019.9.06 valid days", days )
 
-	print ("Try to get Mtss_total on 2019.10.11: ", getMtss("2019-10-10"))
+	#print ("Try to get Mtss_total on 2019.10.11: ", getMtss("2019-10-10"))
 	#print ("Try to get Current market:", getMarketYesterday() )
 	#print ("Try to get Current PE:", getCurPE() )
