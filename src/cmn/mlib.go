@@ -3,7 +3,7 @@
 /* ----
 /*  License: BSD
 /* ----
-/* v 0.01   math libs for policy B  --- 2019.1.26
+/* 0.1   math libs for policy B  --- 2019.1.26
 /******************************************************************/
 
 package cmn
@@ -11,13 +11,12 @@ package cmn
 import(
         "math"
 	//"testing"
-        //"github.com/stretchr/testify/assert"
         "fmt"
 )
 
 //var T *testing.T = &testing.T{}
 
-// simple average
+// simple average a slice
 func SimpleAvg(din []float64)(avg_out float64){
 	var avg float64 = 0.0
 
@@ -27,6 +26,26 @@ func SimpleAvg(din []float64)(avg_out float64){
 	avg = float64(avg)/float64(len(din))
 
 	return avg
+}
+
+// input eg.  ["2010-05-20"](["pe_sh"] 2.548)
+func SimpleAvg_Eggmap(mapIn map[string](map[string]float64) )(avg_mout map[string](map[string]float64) ){
+	var avgPe, avgPb, avgTnr float64 = 0.0, 0.0, 0.0
+
+	for tag, evtMap := range mapIn{
+		fmt.Printf("@ SimpleAvg_map: tag:%v, evt[pe_total]:%v,[pb_total]:%v,[tnr_total]: %v  \n", tag, evtMap)
+		avgPe  += evtMap["pe_total"]
+		avgPb  += evtMap["pb_total"]
+		avgTnr += evtMap["tnr_total"]
+	}
+	avgPe  = avgPe/float64(len(mapIn) )
+	avgPb  = avgPe/float64(len(mapIn) )
+	avgTnr = avgPe/float64(len(mapIn) )
+
+	avg_mout["pe_total_avg"]  = avgPe
+	avg_mout["pb_total_avg"]  = avgPb
+	avg_mout["tnr_total_avg"] = avgTnr
+	return
 }
 
 
@@ -90,7 +109,7 @@ func CalRowEntropy(din [][]float64)(e []float64){
                 k = 1/math.Log(float64(len(din[0]) ))
         }
 
-        _, Y := Norm_ent(din)
+        _, Y := Norm_2d(din)
         //Y, _ := Norm_ent(din)
 
         for _, row := range Y{
@@ -134,10 +153,19 @@ func sum1d(d []float64)(sum float64){
         return
 }
 
+
+
+
 /****************************
 /* step 1: normalization    *
 /****************************/
-func Norm_ent(d [][]float64)(xp, xn [][]float64){
+// Normalize 1d slice data in(every data is a indicator).
+func Norm_1d_In(d []float64, min []float64, max []float64)(d_p, d_n []float64){
+
+}
+
+
+func Norm_2d(d [][]float64)(xp, xn [][]float64){
         max_min := []float64{}
         min, max := GetMinMax(d)
         YMAX, YMIN := 0.9999, 0.0001
@@ -163,7 +191,7 @@ func Norm_ent(d [][]float64)(xp, xn [][]float64){
 }
 
 
-
+//----------------------- Get Min/Max ----------------------
 func GetMinMax(din [][]float64)(min, max []float64){
         min, max = varinit_2d(din), varinit_2d(din)
 
@@ -189,3 +217,4 @@ func varinit_2d(din [][]float64)(o []float64){
         }
         return
 }
+

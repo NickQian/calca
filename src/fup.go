@@ -24,9 +24,12 @@ func UpdateCW_Model()(bool){
 }
 
 
-// distill current event character
+//func Update
+
+
+// distill CURRENT event character. manually usage
 func DistilEvt(fn_date string) bool{
-	eggs, _, suc := GetBtsData(fn_date)
+	eggs, _, suc := GetBtsData(fn_date, fn_rec_data, fn_avg_data)
 	fmt.Print("info: <DistilEvt> : eggs: ", eggs)
 	return suc
 }

@@ -15,7 +15,7 @@ import (
 
 
 func TestDistilEvt(t *testing.T){
-        res := DistilEvt(dfn.FN_DATE_BOT_RLX)
+        res := DistilEvt(dfn.FN_DATE_TOP_CRZ)        // FN.DATE_BOT_RLX/PUC  TOP_CRZ/HOT
         t.Logf(" %t ", res)
 }
 

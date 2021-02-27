@@ -29,7 +29,10 @@ import (
 //var T *testing.T = &testing.T{}
 var Log *log.Logger
 var T_Now time.Time
-var Today string
+var timeLocation *time.Location
+
+var TodayStr string
+
 var A = new(T_A)               // Inst A parameters
 
 var (
@@ -69,6 +72,8 @@ func init(){
                 panic("<cmnfd-init> Open logfile error")
         }
 
+	timeLocation, _ = time.LoadLocation("Asia/Shanghai")
+
 	initToday()
         initBotpara(BotA)                // point input
 	initLogger()
@@ -81,7 +86,8 @@ func initToday(){
         TodaySlice := strings.SplitAfter(T_Now.Format(TIME_LAYOUT_STR), " ")
         Today = strings.TrimSpace(TodaySlice[0])
 
-        Print("<cmn-init>: Today:", Today )
+
+        Print("<cmn-init>: TodayStr:", TodayStr )
         Print("<cmn-init> done!", TodaySlice)
 }
 
@@ -143,6 +149,7 @@ func ReadBtDate(fn string)(o []string){
 /*  Bool<-json Bool; float64<-Json number; string<-json string;
 /* []interface{}<-Json array; map[string]interface <- json obj; nil<- Json nul
 /*-----------------------------------------------------------------------------------------*/
+
 func ReadRunData(fn_rundata string)(rundata T_Rundata, err error){
         rdIf, err := JsonReadUnmash(fn_rundata)
       	rundata = JsonExtr_Rundata(rdIf)
@@ -165,7 +172,19 @@ func ReadRrunRes(fn_RrunRes string) (rrunRes T_SimRes, err error){
 }
 
 
-// read file, output "map"
+// read one type events and collcet the character data -> raw data martrix(before normalization)
+func ReadEgg(fn_egg string)(map[string](map[string]float64)  ){
+	rdIf, err := JsonReadUnmash(fn_egg)
+	eggMap := JsonExtr_Egg(rdIf)
+	return eggMap
+}
+
+
+
+/*******************************************************************************
+/*----------- read file, output "map" ---------------------------
+// read
+/*********************************************************************************/
 func JsonReadUnmash(fn_json string)(rdmapIf map[string]interface{}, err error){
         rbytes, err := ReadFile(fn_json)
 	var rdIf interface{}           // left of assertion must be interface{}
@@ -184,6 +203,19 @@ func JsonReadUnmash(fn_json string)(rdmapIf map[string]interface{}, err error){
         return runIf, nil
 }
 
+//---------------- interface extract --------------------------------
+func JsonExtr_Egg(rdEggIf map[string]interface{})(egg map[string]float64){
+	egg = make(map[string]float64)
+
+	for tag, evt := range rdEggIf{
+		if item, err := evt.(map[string]float64); err == nil{
+			for k, v := range item{
+				egg[k] = v
+			}
+		}
+	}
+	return
+}
 
 func JsonExtr_Rundata(runIf map[string]interface{})(rundata T_Rundata){
         for k, v := range runIf{
@@ -263,20 +295,21 @@ func JsonExtr_RrunRes(rrunResIf map[string]interface{})(rrunRes T_SimRes){ // as
 }
 
 
-/************************************ write json result *********************************
+/******************************* write json result ***************************************
 /* write json file  (0777/0644/0640)
 /* Bool<-json Bool;           float64<-Json number;             string<-json string;
 /* []interface{}<-Json array; map[string]interface <- json obj; nil<- Json nul
 /****************************************************************************************/
 //func WriteEvtdata(i_evt int, A_evt []T_A, eggMap map[string]interface{} )(  ){
-func WriteEvtdata(i_evt int, A_evt []T_A, eggMap map[string](map[string]float64) )(  ){
-	fmt.Println("===> <WriteEvtdata>:  A_evt, eggMap:",  A_evt, eggMap) 
+func WriteEvtdata(fn_rec_data, fn_avg_data string, i_evt int, A_evt []T_A, eggMap map[string](map[string]float64) )(  ){
+	fmt.Printf("===> <WriteEvtdata>:  A_evt: %v   \n",  A_evt )
+	fmt.Printf("===> <WriteEvtdata>:   eggMap: %v   \n",   eggMap)
 	if i_evt > 0{
-      		WriteEvtWins(A_evt, FN_BOT_PUC_REC_DAT, true)      // if not first event, append
-		WriteEvtAvg(eggMap, FN_BOT_PUC_AVG_DAT, true)
+      		WriteEvtWins(A_evt, fn_rec_data, true)      // if not first event, append
+		WriteEvtAvg(eggMap, fn_avg_data, true)
 	}else{
-		WriteEvtWins(A_evt, FN_BOT_PUC_REC_DAT, false)     // if first event, new write
-		WriteEvtAvg(eggMap, FN_BOT_PUC_AVG_DAT, false)
+		WriteEvtWins(A_evt, fn_rec_data, false)     // if first event, new write
+		WriteEvtAvg(eggMap, fn_avg_data, false)
 	}
 }
 
@@ -373,28 +406,44 @@ func Wr_Json_(jsonByte []byte, fn string)(err error){
 /*
 /**********************************************************************************************/
 
-// output the data matrix for WeightEntropy
-func GetEigDm(fn string)(dm_eig [][]float64, suc bool){
+// read eggs, normalize it, output the data matrix( for WeightEntropy)
+func GetEigDm(fn_eggBotRlx, fn_eggBotPuc, fn_eggTopCrz, fn_eggTopHot string)(dmEigRlx, dmEigPuc, dmEigHot, dmEigCrz [][]float64, suc bool){
+	suc = false
+	// read files in "/data/proc"
+        eggRlx, _, suc := ReadEgg(fn_eggBotRlx)
+        eggPuc, _, suc := ReadEgg(fn_eggBotPuc)
+        eggHot, _, suc := ReadEgg(fn_eggTopHot)
+        eggCrz, _, suc := ReadEgg(fn_eggTopCrz)
 
-        eggs, _, suc := GetBtsData(fn)
-        dm_eig = eggs2eig(eggs)
+	//// simple average it. relsults: map
+	//eggAvgRlx, _ := SimpleAvg_Eggmap(eggRlx)
+	//eggAvgPuc, _ := SimpleAvg_Eggmap(eggPuc)
+	//eggAvgHot, _ := SimpleAvg_Eggmap(eggHot)
+	//eggAvgCrz, _ := SimpleAvg_Eggmap(eggCrz)
+	// Average the PE/PB/TNR ... may be not good idea
+
+        // maps to matrix
+        dmEigRlx = Eggs2Dm(eggRlx)
+        dmEigPuc = Eggs2Dm(eggPuc)
+        dmEigHot = Eggs2Dm(eggHot)
+        dmEigCrz = Eggs2Dm(eggCrz)
+
+	suc = true
 
 	return dm_eig, suc
 }
 
-//func keystrip()(){
-//}
+
 
 /**********************************************************************************
 /*  1)qif get bot/top windows data.
 /*  2)average it and return map (also write the rec file and the avg data file)
 /**********************************************************************************/
-//func GetBtsData(fn_bt string)(eggs map[string]interface{}, A_evt []T_A, suc bool){
-func GetBtsData(fn_bt string)(eggs map[string](map[string]float64), A_evt []T_A, suc bool){
+// get Bottom/Top data bases on date writen in BT fn. Then write result uses <WriteEvtdata> 
+func GetBtsData(fn_bt string, fn_rec_data, fn_avg_data string)(eggs map[string](map[string]float64), A_evt []T_A, suc bool){
         A_evt = make([]T_A, WIN_SIZE)                 // eg. 5 T_A per event   panic: runtime error: index out of range
         //var eggmap map[string]interface{}
         var egg_map map[string](map[string]float64 )
-        //eggs = make(map[string]interface{})
         eggs = make( map[string](map[string]float64) )
 
         btsdate := GetBtsDate(fn_bt)
@@ -404,29 +453,29 @@ func GetBtsData(fn_bt string)(eggs map[string](map[string]float64), A_evt []T_A,
 
         for i_evt, win := range btsdate{
                 for j_day, day := range win{    //--> In a event
-                	fmt.Println("#(3), i_evt, j_win, day:", i_evt, j_day, day)
+                	fmt.Printf("Info:(stp 1): i_evt:%v, j_win:%v, day:%v   \n", i_evt, j_day, day)
 		        time.Sleep(QIF_ACCESS_INTVL * time.Millisecond)
-			dicmkt := qif.GetMarket(day)
+			dicmkt_raw := qif.GetMarket(day)
+			dicmkt := mktRaw2dict(day, dicmkt_raw)
 
                         if len(dicmkt ) != 0{
-                              //qif.FilDicToA(dicmkt, &a[(i_evt_valid)*lwsize + j_day_valid])
-                                A_evt[j_day_valid].EventType = day
-                                qif.FilDicToA(dicmkt, &A_evt[j_day_valid])
-                                //fmt.Println("@@@@ A is:", A_evt )
+                                //A_evt[j_day_valid].Evt_Tag = day
+                                qif.FilDicToA(dicmkt, &A_evt[j_day_valid], DateStrAddSlash(day) )
+                                //fmt.Println("@@@ A is:", A_evt )
                                 j_day_valid++;
-                                Print("#(4) i_evt_valid/j_day_valid are:",i_evt_valid, j_day_valid)
+                                //Print("Info(2) i_evt_valid/j_day_valid are:",i_evt_valid, j_day_valid)
                         }
                         if j_day_valid == PRE_SMP_NUM{
    			        egg_map = avgEvt(day, A_evt)        //eggmap map[string]interface{}
    			        eggAppend(&eggs, egg_map)
-				WriteEvtdata(i_evt, A_evt, egg_map )
-				Print("------#(5)#---- write done-----")
+				WriteEvtdata(fn_rec_data, fn_avg_data, i_evt, A_evt, egg_map )
+				//Print("------#(3)#---- write done-----")
                         	break
                         }
                 } // end a event
                 i_evt_valid++;
                 lwsize, j_day_valid = j_day_valid, 0
-                log.Printf("~~~~~~~~~~~~~~~~~~~~ a event finish, window size: %v ~~~~~~~~~~~~~~~~~~~~~~", lwsize)
+                log.Printf("~~~~~~~~~~~~~~ a event finish, window size: %v ~~~~~~~~~~~~~~~~~~~", lwsize)
         } // all events
 
         return eggs, A_evt, true
@@ -434,11 +483,68 @@ func GetBtsData(fn_bt string)(eggs map[string](map[string]float64), A_evt []T_A,
 
 
 
-// average evt data to single win, then convert it to eig maps
-//func eggs2eig(eggs map[string]interface{})(dm_eig [][]float64){
-func eggs2eig(eggs map[string](map[string]float64) )(dm_eig [][]float64){
-	//eggs = make(map[string][]float64 )
+func GetCurMarket()(map[string]float64) {
+	dicRaw := qif.GetCurMarket_raw()
+	dicMkt := mktRaw2dict(TodayStr, dicRaw)
+	return
+}
 
+
+
+
+func mktRaw2dict(dateTag string, dicRaw map[string]float64)(dicMkt map[string]float64){
+	var cmc_total, cmc_sz,  pe_sz,  pb_sz, tnr_sz float64
+	cmc_sh          := dicRaw["cmc_sh"]
+	cmc_szm, cmc_smb, cmc_gem  := dicRaw["cmc_szm"], dicRaw["cmc_smb"], dicRaw["cmc_gem"]
+	dateSmbStart, _ := time.ParseInLocation(TIME_LAYOUT_SHORT, DATE_MKT_SMB_START, time.Local )
+	dateGemStart, _ := time.ParseInLocation(TIME_LAYOUT_SHORT, DATE_MKT_GEM_START, time.Local )
+	date520Evt,   _ := time.ParseInLocation(TIME_LAYOUT_SHORT, DATE_2015_0520EVT,  time.Local )
+	dateTag_ := DateStrAddSlash(dateTag)
+        dateSmp, _ := time.ParseInLocation(TIME_LAYOUT_SHORT, dateTag_, time.Local)
+	dicMkt = dicRaw                                   // init dicMkt
+	fmt.Printf("Info: init dicMkt with raw qif data: %v   \n", dicMkt)
+
+	//--- get pe_sz,pb_sz ...etc
+	if dateSmp.Before(dateSmbStart){                  //2004->2006.2.10.  use qif raw data
+		cmc_sz, pe_sz, pb_sz, tnr_sz = dicRaw["cmc_szm"] , dicRaw["pe_szm"] , dicRaw["pb_szm"] , dicRaw["tnr_szm"] 
+		fmt.Println("@: case 1: cmc_sz=cmc_szm, pe:", pe_sz)
+	}else if dateSmp.Before(dateGemStart){            //2006.2.10->2010.6.18. smb started
+		cmc_sz = cmc_szm + cmc_smb
+		pe_sz  = dicRaw["pe_szm"] *(cmc_szm/cmc_sz) + dicRaw["pe_smb"] * (cmc_smb/cmc_sz)
+		pb_sz  = dicRaw["pb_szm"] *(cmc_szm/cmc_sz) + dicRaw["pb_smb"] * (cmc_smb/cmc_sz)
+		tnr_sz = dicRaw["tnr_szm"]*(cmc_szm/cmc_sz) + dicRaw["tnr_smb"]* (cmc_smb/cmc_sz)
+		fmt.Printf("@: case 2: cmc_sz=cmc_szm(%v) + cmc_smb(%v), pe_szm: %v, pe_sz: %v  \n", cmc_szm, cmc_smb, dicRaw["pe_szm"], pe_sz)
+	}else if dateSmp.Before(date520Evt){              //2010.6.18->2015.5.20. smb + gem started, but not included in szm.
+                cmc_sz = cmc_szm + cmc_smb + cmc_gem
+                pe_sz  = dicRaw["pe_szm"] *(cmc_szm/cmc_sz) + dicRaw["pe_smb"] * (cmc_smb/cmc_sz) + dicRaw["pe_gem"] * (cmc_gem/cmc_sz)
+                pb_sz  = dicRaw["pb_szm"] *(cmc_szm/cmc_sz) + dicRaw["pb_smb"] * (cmc_smb/cmc_sz) + dicRaw["pb_gem"] * (cmc_gem/cmc_sz)
+                tnr_sz = dicRaw["tnr_szm"]*(cmc_szm/cmc_sz) + dicRaw["tnr_smb"]* (cmc_smb/cmc_sz) + dicRaw["tnr_gem"]* (cmc_gem/cmc_sz)
+                fmt.Printf("@: case 3: cmc_sz=cmc_szm+ cmc_smb + cmc_gem:%v, pe_szm:%v, pe_sz:%v  \n", cmc_sz, dicRaw["pe_szm"], pe_sz)
+        }else{                                            // after 2015.5.20.
+		cmc_sz  = dicRaw["cmc_szm"]  // Cmc_szm already include Cmc_gem, cmc_smb, or partially ?
+		pe_sz, pb_sz, tnr_sz = dicRaw["pe_szm"] , dicRaw["pb_szm"] , dicRaw["tnr_szm"]  // but 399001.SZ can be used as the market representation
+                fmt.Println("@: case 4. sames as 1: cmc_sz=cmc_szm: pe_sz:", cmc_sz, pe_sz)
+	}
+
+	//--- get pe_total, pb_total ...etc
+	cmc_total = cmc_sh + cmc_sz
+	wei_sh,  wei_sz  := cmc_sh/cmc_total,  cmc_sz/cmc_total
+	pe_total  := dicRaw["pe_sh"]  * wei_sh + pe_sz  * wei_sz
+	pb_total  := dicRaw["pb_sh"]  * wei_sh + pb_sz  * wei_sz
+	tnr_total := dicRaw["tnr_sh"] * wei_sh + tnr_sz * wei_sz
+	dicMkt["cmc_total"],  dicMkt["cmc_sz"]  = cmc_total,  cmc_sz           // these 2 need process
+	dicMkt["pe_total"],  dicMkt["pe_sz"]  = pe_total,  pe_sz
+	dicMkt["pb_total"],  dicMkt["pb_sz"]  = pb_total,  pb_sz
+	dicMkt["tnr_total"], dicMkt["tnr_sz"] = tnr_total, tnr_sz
+	fmt.Printf("Info: cmc_sh: %v,cmc_sz: %v,cmc_szm:%v, cmc_smb:%v, cmc_gem:%v  \n", cmc_sh, cmc_sz, cmc_szm, cmc_smb, cmc_gem )
+	fmt.Printf("### pe_tatal: %v, wei_sh: %v, wei_sz:%v  \n", pe_total, wei_sh,  wei_sz)
+	return
+}
+
+// convert egg map to to dm_eig
+//func Eggs2Dm(eggs map[string]interface{})(dm_eig [][]float64){
+func Eggs2Dm(eggs map[string](map[string]float64) )(dm_eig [][]float64){
+	// row_pe_total etc...
         var r_pe_total,   r_pe_sh,   r_pe_sz   []float64
         var r_volr_total, r_volr_sh, r_volr_sz []float64
         var r_mtsr_total, r_mtsr_sh, r_mtsr_sz []float64
@@ -447,9 +553,7 @@ func eggs2eig(eggs map[string](map[string]float64) )(dm_eig [][]float64){
 	//------------- get ordered key slice ------------------------------
 	var eggkeys []string                         // key is day string
         for ek, _ := range eggs{
-        	//if _, ok := egg.(string); ok{        // do interface type assertion
               	eggkeys = append(eggkeys, ek)
-              	//}
 	}
 	fmt.Println("<egg2eig>: eggkeys:", eggkeys)
 	sort.Strings(eggkeys)
@@ -479,9 +583,9 @@ func eggs2eig(eggs map[string](map[string]float64) )(dm_eig [][]float64){
         }  // end dated eggs map extraction
 
         // ----------- assemble the data matrix ----------------------------
-        dm_eig = append(append(append(append(append(append(append(append(append(dm_eig,  
-                        r_pe_total  ), r_pe_sh  ), r_pe_sz  ),  
-                        r_volr_total), r_volr_sh), r_volr_sz), 
+        dm_eig = append(append(append(append(append(append(append(append(append(dm_eig,
+                        r_pe_total  ), r_pe_sh  ), r_pe_sz  ),
+                        r_volr_total), r_volr_sh), r_volr_sz),
                         r_mtsr_total), r_mtsr_sh), r_mtsr_sz)
         return
 }
@@ -571,7 +675,8 @@ func avgEvt(dayStr string, a []T_A)(eggmap map[string](map[string]float64) ){ //
         eggc["mtsr_total"], eggc["mtsr_total"], eggc["mtsr_sz"] = mtsr_total, mtsr_sh, mtsr_sz
 	*/
 
-	eggmap[dayStr] = eggc
+	dayStr_ := DateStrAddSlash(dayStr)
+	eggmap[dayStr_] = eggc
 
 	return
 }
@@ -620,6 +725,19 @@ func GetBtWindow_raw(date string, prenum int)(bw []string){
         return
 }
 
+
+// eg. input: 20150520, output: 2010-05-20
+func DateStrAddSlash (dateStrShort string)(dateStr string){
+	dateByte := []byte(dateStrShort)
+	byteTmp  := [][]byte{ dateByte[0:4], []byte("-"), dateByte[4:6], []byte("-"), dateByte[6:8] }
+	for _, v := range byteTmp{
+        	strTmp := string(v)
+		//fmt.Printf("##, v: %v, strTmp: %v   \n ", v, strTmp)
+		dateStr = dateStr + strTmp
+	}
+	//fmt.Print("## dateStr:", dateStr,)
+	return
+}
 
 func LastDay(day time.Time)(lastday time.Time){
         lastday = day.AddDate(0, 0, -1)

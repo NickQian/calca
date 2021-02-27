@@ -99,7 +99,7 @@ func TestGetBtsDate(t *testing.T){
 
 func TestGetBtsData(t *testing.T){
 	//var a = make([]dfn.T_A, 50)
-	eggMaps, _, suc := GetBtsData(dfn.FN_BOT_PUC_DATE)
+	eggMaps, _, suc := GetBtsData(dfn.FN_BOT_PUC_DATE, dfn.FN_EVT_REC_DAT, dfn.FN_EVT_AVG_DAT)
 	t.Logf("t.Logf <TestGetBtsData> result: %v ", suc)
 	assert.True(t, suc)
 	t.Logf("t.Log <TestGetBtsData>. eggMap: %v ", eggMaps)
@@ -107,6 +107,7 @@ func TestGetBtsData(t *testing.T){
 
 
 func TestGetEigDm(t *testing.T){
-	eigDm, _ := GetEigDm(dfn.FN_BOT_PUC_DATE)
+
+	eigDm, _ := GetEigDm(dfn.FN_EGG_BOT_RLX, dfn.FN_EGG_BOT_PUC, dfn.FN_EGG_TOP_CRZ, dfn.FN_EGG_TOP_HOT)
 	t.Log("<TestGetEigDm> result: ", eigDm)
 }
