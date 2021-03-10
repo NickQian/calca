@@ -28,8 +28,9 @@ func SimpleAvg(din []float64)(avg_out float64){
 	return avg
 }
 
-// input eg.  ["2010-05-20"](["pe_sh"] 2.548)
-func SimpleAvg_Eggmap(mapIn map[string](map[string]float64) )(avg_mout map[string](map[string]float64) ){
+
+// input eg.  ["2010-05-20"](["pe_sh"] 2.548, ["pb_sh"] 1.2 )
+func SimpleAvg_Eggmap(mapIn map[string](map[string]float64) )(avg_mout map[string]float64 ){
 	var avgPe, avgPb, avgTnr float64 = 0.0, 0.0, 0.0
 
 	for tag, evtMap := range mapIn{
@@ -159,9 +160,17 @@ func sum1d(d []float64)(sum float64){
 /****************************
 /* step 1: normalization    *
 /****************************/
-// Normalize 1d slice data in(every data is a indicator).
+// Normalize 1d slice data in(every data is a indicator) bases on a input min-max.
 func Norm_1d_In(d []float64, min []float64, max []float64)(d_p, d_n []float64){
-
+	for i, v  := range d{
+		//YMIN := 0.0000001
+		if v < min[i]  || v > max[i]{
+			panic("ERROR: <Norm_1d_In>: Some thing goes wrong. v<min or v > max during do normlization.")
+		}
+		d_p[i] = (v - min[i])/(max[i] - min[i])
+		d_n[i] = (max[i] - v)/(max[i] - min[i])
+	}
+	return
 }
 
 
@@ -191,7 +200,20 @@ func Norm_2d(d [][]float64)(xp, xn [][]float64){
 }
 
 
+
 //----------------------- Get Min/Max ----------------------
+// 1d out
+func GetMinMax_1d(din []float64)(min, max float64){
+	min, max = din[0], din[0]
+	for _, v := range din{
+		if v > max { max = v}
+		if v < min { min = v}
+	}
+	return
+}
+
+
+// 2d out
 func GetMinMax(din [][]float64)(min, max []float64){
         min, max = varinit_2d(din), varinit_2d(din)
 

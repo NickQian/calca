@@ -10,12 +10,12 @@ package mipos
 
 import (
 	"testing"
-	dfn "define"
+	//"define"
 )
 
 
 func TestMipos(t *testing.T){
-	crzSlc, hotSlc, pucSlc, rlxSlc, cur_pos, bi, ti := Mipos("A")
-        t.Logf("<TestMipos> res: %v \n", kline)
+	cw  := Mipos("A")
+        t.Logf("<TestMipos> res: %v \n", cw)
 }
 

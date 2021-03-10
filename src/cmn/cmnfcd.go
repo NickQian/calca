@@ -84,7 +84,7 @@ func init(){
 func initToday(){
         T_Now = time.Now()
         TodaySlice := strings.SplitAfter(T_Now.Format(TIME_LAYOUT_STR), " ")
-        Today = strings.TrimSpace(TodaySlice[0])
+        TodayStr = strings.TrimSpace(TodaySlice[0])
 
 
         Print("<cmn-init>: TodayStr:", TodayStr )
@@ -172,9 +172,12 @@ func ReadRrunRes(fn_RrunRes string) (rrunRes T_SimRes, err error){
 }
 
 
-// read one type events and collcet the character data -> raw data martrix(before normalization)
-func ReadEgg(fn_egg string)(map[string](map[string]float64)  ){
+// read one type events and collcet the "Cha"(character data) -> raw data martrix(before normalization)
+func ReadEgg(fn_egg string)( map[string](map[string]float64)  ){
 	rdIf, err := JsonReadUnmash(fn_egg)
+	if err != nil{
+		fmt.Printf("Err: <ReadEgg> JsonReadUnmash result is: %v  \n", err)
+	}
 	eggMap := JsonExtr_Egg(rdIf)
 	return eggMap
 }
@@ -204,13 +207,14 @@ func JsonReadUnmash(fn_json string)(rdmapIf map[string]interface{}, err error){
 }
 
 //---------------- interface extract --------------------------------
-func JsonExtr_Egg(rdEggIf map[string]interface{})(egg map[string]float64){
-	egg = make(map[string]float64)
+// egg read -> map
+func JsonExtr_Egg(rdEggIf map[string]interface{})(egg map[string](map[string]float64) ){
+	egg = make(map[string](map[string]float64) )
 
 	for tag, evt := range rdEggIf{
-		if item, err := evt.(map[string]float64); err == nil{
+		if item, ok := evt.(map[string]float64); ok{
 			for k, v := range item{
-				egg[k] = v
+				(egg[tag])[k] = v
 			}
 		}
 	}
@@ -410,10 +414,10 @@ func Wr_Json_(jsonByte []byte, fn string)(err error){
 func GetEigDm(fn_eggBotRlx, fn_eggBotPuc, fn_eggTopCrz, fn_eggTopHot string)(dmEigRlx, dmEigPuc, dmEigHot, dmEigCrz [][]float64, suc bool){
 	suc = false
 	// read files in "/data/proc"
-        eggRlx, _, suc := ReadEgg(fn_eggBotRlx)
-        eggPuc, _, suc := ReadEgg(fn_eggBotPuc)
-        eggHot, _, suc := ReadEgg(fn_eggTopHot)
-        eggCrz, _, suc := ReadEgg(fn_eggTopCrz)
+        eggRlx := ReadEgg(fn_eggBotRlx)
+        eggPuc := ReadEgg(fn_eggBotPuc)
+        eggHot := ReadEgg(fn_eggTopHot)
+        eggCrz := ReadEgg(fn_eggTopCrz)
 
 	//// simple average it. relsults: map
 	//eggAvgRlx, _ := SimpleAvg_Eggmap(eggRlx)
@@ -430,7 +434,7 @@ func GetEigDm(fn_eggBotRlx, fn_eggBotPuc, fn_eggTopCrz, fn_eggTopHot string)(dmE
 
 	suc = true
 
-	return dm_eig, suc
+	return dmEigRlx, dmEigPuc, dmEigHot, dmEigCrz, suc
 }
 
 
@@ -486,7 +490,7 @@ func GetBtsData(fn_bt string, fn_rec_data, fn_avg_data string)(eggs map[string](
 func GetCurMarket()(map[string]float64) {
 	dicRaw := qif.GetCurMarket_raw()
 	dicMkt := mktRaw2dict(TodayStr, dicRaw)
-	return
+	return dicMkt
 }
 
 
@@ -546,6 +550,8 @@ func mktRaw2dict(dateTag string, dicRaw map[string]float64)(dicMkt map[string]fl
 func Eggs2Dm(eggs map[string](map[string]float64) )(dm_eig [][]float64){
 	// row_pe_total etc...
         var r_pe_total,   r_pe_sh,   r_pe_sz   []float64
+        var r_pb_total,   r_pb_sh,   r_pb_sz   []float64
+        var r_tnr_total,  r_tnr_sh,  r_tnr_sz   []float64
         var r_volr_total, r_volr_sh, r_volr_sz []float64
         var r_mtsr_total, r_mtsr_sh, r_mtsr_sz []float64
 
@@ -566,9 +572,17 @@ func Eggs2Dm(eggs map[string](map[string]float64) )(dm_eig [][]float64){
         	//if egg_m, ok := egg_sorted.(map[string]float64); ok{           // do interface type assertion
         	//        for k, eig:= range egg_m{
        	        for k, eig := range egg_sorted{
-       	   		if k == "pe_total"  { r_pe_total   = append(r_pe_total,   eig) }  // eig...
-       	   		if k == "pe_sh"     { r_pe_sh      = append(r_pe_sh,      eig) }  // eig...
-       	   		if k == "pe_sz"     { r_pe_sz      = append(r_pe_sz,      eig) }  // eig...
+       	   		if k == "pe_total"  { r_pe_total   = append(r_pe_total,   eig) }
+       	   		if k == "pe_sh"     { r_pe_sh      = append(r_pe_sh,      eig) }
+       	   		if k == "pe_sz"     { r_pe_sz      = append(r_pe_sz,      eig) }
+
+                        if k == "pb_total"  { r_pb_total   = append(r_pb_total,   eig) }
+                        if k == "pb_sh"     { r_pb_sh      = append(r_pb_sh,      eig) }
+                        if k == "pb_sz"     { r_pb_sz      = append(r_pb_sz,      eig) }
+
+                        if k == "tnr_total" { r_tnr_total  = append(r_tnr_total,   eig) }
+                        if k == "tnr_sh"    { r_tnr_sh     = append(r_tnr_sh,      eig) }
+                        if k == "tnr_sz"    { r_tnr_sz     = append(r_tnr_sz,      eig) }
 
                         if k == "volr_total"{ r_volr_total = append(r_volr_total, eig) }
                         if k == "volr_sh"   { r_volr_sh    = append(r_volr_sh,    eig) }
@@ -583,8 +597,10 @@ func Eggs2Dm(eggs map[string](map[string]float64) )(dm_eig [][]float64){
         }  // end dated eggs map extraction
 
         // ----------- assemble the data matrix ----------------------------
-        dm_eig = append(append(append(append(append(append(append(append(append(dm_eig,
+        dm_eig = append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(dm_eig,
                         r_pe_total  ), r_pe_sh  ), r_pe_sz  ),
+                        r_pb_total  ), r_pb_sh  ), r_pb_sz  ),
+                        r_tnr_total ), r_tnr_sh ), r_tnr_sz ),
                         r_volr_total), r_volr_sh), r_volr_sz),
                         r_mtsr_total), r_mtsr_sh), r_mtsr_sz)
         return

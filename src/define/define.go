@@ -113,24 +113,55 @@ type T_volr struct{
         Volr_gem   float64 `jason:"Volr_gem"`
 }
 
+//----------------------- Market factors --------------------------------------
+type T_Market struct{
+	mktVal		T_MktVal
+	trdEmo		T_TrdEmo
+	pubPly		T_PubPly
+}
+
+type T_MktVal struct{
+	pe_total float64
+	pb_total float64
+}
+
+type T_TrdEmo struct{
+	volr_total float64                 // vol / cap
+	tnr_total  float64
+	mtsr_total float64
+}
+
+type T_PubPly struct{
+	cp   float64                      // credit policy:tighten or relax
+	nbir float64			 // national debt
+	ir     float64                    // interest rate
+}
 
 
 //------------------------ mipos data ------------------------------------------
 type T_Mipos struct{
-	Bot_trunk  float64       // -Pi
-	Bot_punch  float64       // punch ~  0
-	Top_hot    float64       // 0     ~  hot
-	Top_crzy   float64       // hot   ~  Pi
-	Eqpo       float64       // 0
+	BotRlx   []float64       // -Pi
+	BotPuc   []float64       // punch ~  0
+	TopHot   []float64       // 0     ~  hot
+	TopCrz   []float64       // hot   ~  Pi
+	Eqpo       float64       // 0: equilibrium position
+	Bi         float64
+	Ti         float64
+	Cw_pos     float64
+	Gnd        float64
+	Vcc        float64
 }
 
 
+// ------- run data ------------
 type T_Rundata struct{
 	LastBotDate  string
 	LastTopDate  string
 }
 
 
+
+//-------------------- ERR messages ----------------------
 type T_ErrCalca struct{
         Code       int
 	QifErr     string
@@ -147,6 +178,9 @@ const(
         // JQ == JoinQuant) | UQ == Uqer.io | RQ == RiceQuant | BQ == BigQuant | TS == tushare
         QIF_VENDOR         = "TS"
 )
+
+
+
 
 
 
@@ -168,7 +202,7 @@ const(
 
 
 
-//----------------------- don't need modification --------------------------------------------
+//============================= don't need modification ==============================
 const(
         TIME_LAYOUT_STR    = "2006-01-02 15:04:05"
         TIME_LAYOUT_SHORT  = "2006-01-02"
@@ -185,6 +219,7 @@ const(  DATE_HS300_START   = "2005-04-29"
 
 
 const(  RUN_DIR = "/home/nk/calca/src/" )
+
 
 const(
 	FN_RUN_DATA        = RUN_DIR + "data/run_data.json"
