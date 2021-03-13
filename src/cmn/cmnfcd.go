@@ -176,9 +176,9 @@ func ReadRrunRes(fn_RrunRes string) (rrunRes T_SimRes, err error){
 func ReadEgg(fn_egg string)( map[string](map[string]float64)  ){
 	rdIf, err := JsonReadUnmash(fn_egg)
 	if err != nil{
-		fmt.Printf("Err: <ReadEgg> JsonReadUnmash result is: %v  \n", err)
+		fmt.Printf("Err: <ReadEgg> JsonReadUnmash result is: %v, fn: %v  \n", err, fn_egg)
 	}
-	eggMap := JsonExtr_Egg(rdIf)
+	eggMap := JsonExtr_toMap(rdIf)
 	return eggMap
 }
 
@@ -192,13 +192,13 @@ func JsonReadUnmash(fn_json string)(rdmapIf map[string]interface{}, err error){
         rbytes, err := ReadFile(fn_json)
 	var rdIf interface{}           // left of assertion must be interface{}
         if err = json.Unmarshal(rbytes, &rdIf); err != nil{
-        	fmt.Println("Error: <JsonReadUnmash> unmarshall error:", err)
+        	fmt.Printf("Error: <JsonReadUnmash> unmarshall error: %v, fn: %v  \n", err, fn_json)
         	return
         }
 
         // type assertion to use interface
         runIf, ok := rdIf.(map[string]interface{})
-       	fmt.Println("Info:runIf, ok:", runIf, ok)
+       	fmt.Printf("Info:<JsonReadUnmash> fn:%v readed.  \n",  fn_json)
 
         if !ok{
         	fmt.Println("Error: <JsonReadUnmash> type assertion err, ok value:", ok)
@@ -207,17 +207,26 @@ func JsonReadUnmash(fn_json string)(rdmapIf map[string]interface{}, err error){
 }
 
 //---------------- interface extract --------------------------------
-// egg read -> map
-func JsonExtr_Egg(rdEggIf map[string]interface{})(egg map[string](map[string]float64) ){
+// eig(egg) -> evts -> cha(1 evt) -> item
+// jason read -> map
+func JsonExtr_toMap(rdEggIf map[string]interface{} )(egg map[string](map[string]float64) ){
 	egg = make(map[string](map[string]float64) )
 
-	for tag, evt := range rdEggIf{
-		if item, ok := evt.(map[string]float64); ok{
-			for k, v := range item{
-				(egg[tag])[k] = v
+	for tag, evtIf := range rdEggIf{
+		//fmt.Printf("###1@@: tag:%v, evt:%v,  \n", tag, evtIf)
+		var itemMap = make(map[string]float64 )
+		if chaIf, ok := evtIf.(map[string]interface{} ); ok{           // "pe_sz": interface, "pb_sh": interface
+			for key, numIf := range chaIf{                        // iterate the map[string]interface
+				if num, ok := numIf.(float64); ok{       // "pe_sz": 42.05800
+					itemMap[key] = num
+				}
 			}
+		}else{
+			fmt.Println("Error: <JsonExtr_toMap>???? type assertion fail.", reflect.TypeOf(evtIf).String() )
 		}
-	}
+		egg[tag] = itemMap
+		//fmt.Printf("###2@@:  egg: %v   \n",  egg)
+	} // for
 	return
 }
 
@@ -551,23 +560,19 @@ func Eggs2Dm(eggs map[string](map[string]float64) )(dm_eig [][]float64){
 	// row_pe_total etc...
         var r_pe_total,   r_pe_sh,   r_pe_sz   []float64
         var r_pb_total,   r_pb_sh,   r_pb_sz   []float64
-        var r_tnr_total,  r_tnr_sh,  r_tnr_sz   []float64
+        var r_tnr_total,  r_tnr_sh,  r_tnr_sz  []float64
         var r_volr_total, r_volr_sh, r_volr_sz []float64
         var r_mtsr_total, r_mtsr_sh, r_mtsr_sz []float64
 
-
 	//------------- get ordered key slice ------------------------------
-	var eggkeys []string                         // key is day string
+	var eggkeys []string                            // key is day string
         for ek, _ := range eggs{
               	eggkeys = append(eggkeys, ek)
 	}
-	fmt.Println("<egg2eig>: eggkeys:", eggkeys)
 	sort.Strings(eggkeys)
-	fmt.Println("<egg2eig>: sorted keys: ", eggkeys)
 
         //------- iterate the key slice to append the date's eigen data ------
         for _, key_day := range eggkeys{
-        	fmt.Println("@@key: , r_pe_total: ", key_day, r_pe_total)
         	egg_sorted := eggs[key_day]
         	//if egg_m, ok := egg_sorted.(map[string]float64); ok{           // do interface type assertion
         	//        for k, eig:= range egg_m{
@@ -592,7 +597,6 @@ func Eggs2Dm(eggs map[string](map[string]float64) )(dm_eig [][]float64){
 			if k == "volr_sh"   { r_mtsr_sh    = append(r_mtsr_sh,    eig) }
 			if k == "mtsr_sz"   { r_mtsr_sz    = append(r_mtsr_sz,    eig) }
                 } // end the sorted single egg element extract
-  		fmt.Println("$ r_pe_total: , r_pe_sh: , r_pe_sz:", r_pe_total, r_pe_sh, r_pe_sz)
 		//}
         }  // end dated eggs map extraction
 
@@ -603,6 +607,8 @@ func Eggs2Dm(eggs map[string](map[string]float64) )(dm_eig [][]float64){
                         r_tnr_total ), r_tnr_sh ), r_tnr_sz ),
                         r_volr_total), r_volr_sh), r_volr_sz),
                         r_mtsr_total), r_mtsr_sh), r_mtsr_sz)
+	fmt.Println("@@@: dm_eig:", dm_eig)
+
         return
 }
 
