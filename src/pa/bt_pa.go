@@ -95,10 +95,10 @@ func EvalCurPos(eig_min, eig_max[]float64, dicMkt map[string]float64 )(pos float
 	dm := Eggs2Dm(dicMktS)                                  // dm is [][]float64
 
 	// step 2: Normalize it bases on eig_min, eig_max
-	d_p, _ := Norm_1d_In(dm[0], eig_min, eig_max)           // dm[0] is 1d slice
+	d_p := Norm_EvtsDm(dm, eig_min, eig_max)           // dm[0] is 1d slice
 
 	// step 3: weight it
-	pos = f2_evalOnEig(d_p)
+	pos = f2_evalOnEig(d_p[0])
 
 	return
 }
@@ -106,25 +106,30 @@ func EvalCurPos(eig_min, eig_max[]float64, dicMkt map[string]float64 )(pos float
 
 // eval multiple Eigs (by applying "weight")
 func f2_evalEigs(dm_eigs [][]float64)(so []float64){
-	for i, evtEig := range dm_eigs{
+	dm_eigs_T := TranposeDm(dm_eigs)
+	fmt.Printf("#############: dm_eigs: %v, dm_eigs_T:%v  \n", dm_eigs, dm_eigs_T)
+
+	for i, evtEig := range dm_eigs_T{
 		so = append(so, f2_evalOnEig(evtEig) )
-		fmt.Printf("@@@ <f2_evalEigs>, i:%v, evtEig: %v  \n", i, evtEig)
+		fmt.Printf(" #1# <f2_evalEigs>, i:%v, evtEig: %v  \n", i, evtEig)
 	}
+	fmt.Printf(" #2# <f2_evalEigs>, so: %v \n", so)
 	return
 }
 
 // apply "weight" on single eig
-func f2_evalOnEig(dm_eig []float64 )(do float64){
-	do = 0.0
-        w_ent := []float64{0.33, 0.33, 0.33}          // dummy. not use entropy method now
-        r := []float64{0.5, 0.4, 0.1}               // pe, pb, tnr
+func f2_evalOnEig(dm_evt []float64 )(sum float64){
+	sum = 0.0
+        w_ent := []float64{0.30,0.01,0.02, 0.33,0.01,0.02, 0.33,0.01,0.02}   //pe, pb, tnr       // dummy. not use entropy method now
+        r     := []float64{0.5, 0.0, 0.0,  0.4, 0.0, 0.0,  0.1, 0.0, 0.0 }
 
         w_scr := WeightSwc(w_ent, r)
 
-	for j, v := range dm_eig{
+	for j, v := range dm_evt{
 		eva := w_scr[j] * v
-		do += eva
+		sum += eva
 	}
+	fmt.Printf("### <f2_evalOnEig> w_scr: %v, sum:%v  \n", w_scr, sum)
 	return
 }
 
@@ -132,28 +137,37 @@ func f2_evalOnEig(dm_eig []float64 )(do float64){
 // Gen Crz/Hot/Relax/Puc character values.
 // Average + Normalize + Weight(Factors)
 func Chrp( )(crz_slc, hot_slc, puc_slc, rlx_slc []float64, eigMin, eigMax []float64){
-	var dm_eigAll [][]float64
 
 	dmEigRlx, dmEigPuc, dmEigHot, dmEigCrz, _ := GetEigDm( FN_EGG_BOT_RLX,FN_EGG_BOT_PUC,FN_EGG_TOP_CRZ,FN_EGG_TOP_HOT )
-	dm_eigAll = append(dm_eigAll, dmEigRlx...)
-	// dmEigPuc..., dmEigHot..., dmEigCrz... )
+	var dm_eigAll [][]float64 = make([][]float64, len(dmEigRlx) )
+
+	DmAppend(&dm_eigAll, dmEigRlx)
+	DmAppend(&dm_eigAll, dmEigPuc)
+	DmAppend(&dm_eigAll, dmEigHot)
+	DmAppend(&dm_eigAll, dmEigCrz)
+	DmClean(&dm_eigAll)
+	fmt.Printf("Info: <Chrp>, dm_eigAll: %v   \n", dm_eigAll)
 
 	// step 1: get min_max
 	min_cha, max_cha := GetMinMax( dm_eigAll )               // (min, max []float64)
+	fmt.Printf("Info: <Chrp>, min_cha: %v, max_cha: %v   \n", min_cha, max_cha)
 
 	// step 2: Normalize crz/hot/puc/rlx
-	var dmNormCrz, dmNormHot, dmNormPuc, dmNormRlx [][]float64
-	dmNormCrz = Norm_EvtsDm(dmEigCrz, min_cha, max_cha)
-	dmNormHot = Norm_EvtsDm(dmEigHot, min_cha, max_cha)
-	dmNormPuc = Norm_EvtsDm(dmEigPuc, min_cha, max_cha)
-	dmNormRlx = Norm_EvtsDm(dmEigRlx, min_cha, max_cha)
+	DmClean(&dmEigRlx); DmClean(&dmEigPuc); DmClean(&dmEigHot); DmClean(&dmEigCrz)
+	//var dmNormCrz, dmNormHot, dmNormPuc, dmNormRlx [][]float64
+	dmNormCrz := Norm_EvtsDm(dmEigCrz, min_cha, max_cha)
+	dmNormHot := Norm_EvtsDm(dmEigHot, min_cha, max_cha)
+	dmNormPuc := Norm_EvtsDm(dmEigPuc, min_cha, max_cha)
+	dmNormRlx := Norm_EvtsDm(dmEigRlx, min_cha, max_cha)
+	fmt.Printf("Info: <Chrp>, dmNormCrz:%v\n, dmNormHot:%v\n, dmNormPuc:%v\n, dmNormRlx:%v  \n", dmNormCrz, dmNormHot, dmNormPuc, dmNormRlx)
 
 	// setp 3: weight it (each type)
 	crz_slc = f2_evalEigs(dmNormCrz )
 	hot_slc = f2_evalEigs(dmNormHot )
 	puc_slc = f2_evalEigs(dmNormPuc )
 	rlx_slc = f2_evalEigs(dmNormRlx )
-	
+	fmt.Printf("Info: <Chrp:Weighted>: crz_slc:%v, hot_slc:%v, puc_slc:%v, rlx_slc:%v  \n", crz_slc, hot_slc, puc_slc, rlx_slc)
+
 	eigMin = min_cha
 	eigMax = max_cha
 
@@ -161,15 +175,6 @@ func Chrp( )(crz_slc, hot_slc, puc_slc, rlx_slc []float64, eigMin, eigMax []floa
 }
 
 
-func Norm_EvtsDm(dmEig [][]float64, minCha, maxCha []float64)(dmNorm[][]float64) {
-	for i, eig := range dmEig{
-		d_p, _ := Norm_1d_In(eig, minCha, maxCha)
-                dmNorm = append(dmNorm, d_p  )
-		fmt.Printf("@@<Norm_EvtsDm> i:%v, dmNorm: %v  \n", i, dmNorm)
-        }
-	return
-
-}
 
 //---------------- level 3: f3 : bot_market result ---------------------------------
 // Now it's dummy func

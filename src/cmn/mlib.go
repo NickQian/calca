@@ -161,14 +161,14 @@ func sum1d(d []float64)(sum float64){
 /* step 1: normalization    *
 /****************************/
 // Normalize 1d slice data in(every data is a indicator) bases on a input min-max.
-func Norm_1d_In(d []float64, min []float64, max []float64)(d_p, d_n []float64){
-	for i, v  := range d{
+func Norm_1d_In(d []float64, min float64, max float64)(d_p, d_n []float64){
+	for _, v  := range d{
 		//YMIN := 0.0000001
-		if v < min[i]  || v > max[i]{
+		if v < min  || v > max{
 			panic("ERROR: <Norm_1d_In>: Some thing goes wrong. v<min or v > max during do normlization.")
 		}
-		d_p[i] = (v - min[i])/(max[i] - min[i])
-		d_n[i] = (max[i] - v)/(max[i] - min[i])
+		d_p = append(d_p, (v - min)/(max - min) )
+		d_n = append(d_n, (max - v)/(max - min) )
 	}
 	return
 }
@@ -200,6 +200,15 @@ func Norm_2d(d [][]float64)(xp, xn [][]float64){
 }
 
 
+func Norm_EvtsDm(dmEig [][]float64, minCha, maxCha []float64)(dmNorm[][]float64) {
+        //fmt.Printf("### <Norm_EvtsDm> dmEig in: %v \n", dmEig )
+        for i, eig := range dmEig{
+                d_p, _ := Norm_1d_In(eig, minCha[i], maxCha[i])
+                dmNorm = append(dmNorm, d_p  )
+        }
+        //fmt.Printf("### <Norm_EvtsDm> dmNorm out: %v  \n", dmNorm)
+        return
+}
 
 //----------------------- Get Min/Max ----------------------
 // 1d out
@@ -240,3 +249,19 @@ func varinit_2d(din [][]float64)(o []float64){
         return
 }
 
+
+// T the matrix
+func TranposeDm(dm [][]float64)(dmT [][]float64){
+	for n := 0; n < len(dm); n++{
+		var rowT []float64
+		for _, row := range dm{
+			for j, vInRow := range row{
+				if j == n{
+					rowT = append(rowT, vInRow)
+				}
+			}
+		}
+		dmT = append(dmT, rowT)
+	}
+	return
+}

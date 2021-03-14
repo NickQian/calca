@@ -601,30 +601,51 @@ func Eggs2Dm(eggs map[string](map[string]float64) )(dm_eig [][]float64){
         }  // end dated eggs map extraction
 
         // ----------- assemble the data matrix ----------------------------
-        dm_eig = append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(dm_eig,
-                        r_pe_total  ), r_pe_sh  ), r_pe_sz  ),
+	// note the matrix row/col sequence
+	dm_eig = append(append(append(append(append(append(append(append(append(append(append(append(append(append(append(dm_eig,
+        		r_pe_total  ), r_pe_sh  ), r_pe_sz  ),
                         r_pb_total  ), r_pb_sh  ), r_pb_sz  ),
                         r_tnr_total ), r_tnr_sh ), r_tnr_sz ),
                         r_volr_total), r_volr_sh), r_volr_sz),
                         r_mtsr_total), r_mtsr_sh), r_mtsr_sz)
-	fmt.Println("@@@: dm_eig:", dm_eig)
+	fmt.Println("Info:<Eggs2Dm> dm_eig:", dm_eig)
 
         return
 }
 
 
-//
-//func eggAppend(egg *map[string]interface{}), egg_in map[string]interface{})( bool ){
-func eggAppend(egg *map[string](map[string]float64), egg_in map[string](map[string]float64) )( bool ){
-	//Print("== <eggAppend> egg in:", egg_in)
-	for key, item := range egg_in{
-		  (*egg)[key] = item
+func DmAppend(dm *[][]float64, dmIn [][]float64) bool {
+	//fmt.Printf("<DmApend>@@@: dmIn: %v, *dm:%v  \n", dmIn, *dm)
+	for i, row := range dmIn{
+		(*dm)[i] = append((*dm)[i], row...)
+		//fmt.Printf(" row: %v, dmIn[i]:%v, *dm:%v  \n", row, dmIn[i], *dm)
 	}
-	//Print("=== <eggAppend> egg out:", *egg)
 	return true
 }
 
 
+
+//func eggAppend(egg *map[string]interface{}), egg_in map[string]interface{})( bool ){
+func eggAppend(egg *map[string](map[string]float64), egg_in map[string](map[string]float64) )( bool ){
+	for key, item := range egg_in{
+		  (*egg)[key] = item
+	}
+	return true
+}
+
+
+// remove the first empty element and rows behind that in DM(the empty elements are for the future)
+func DmClean(dm *[][]float64)(int){
+	for i, row := range *dm{
+		if len(row) == 0{
+			*dm = (*dm)[:i]
+			return i
+		}
+	}
+	return len(*dm)
+}
+
+//------------------------------------------------------------------------------------------
 // average maps in a Event (windows data), output the "eggmap" which is 1 event eigen map
 // eggmap: map[ ["day"]: "2019-01-05"
 //              ["item"]: [map[pe] : 14.2 ]
