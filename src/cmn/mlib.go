@@ -252,7 +252,7 @@ func varinit_2d(din [][]float64)(o []float64){
 
 // T the matrix
 func TranposeDm(dm [][]float64)(dmT [][]float64){
-	for n := 0; n < len(dm); n++{
+	for n := 0; n < len(dm[0]); n++{
 		var rowT []float64
 		for _, row := range dm{
 			for j, vInRow := range row{

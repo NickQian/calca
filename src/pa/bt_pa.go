@@ -107,13 +107,11 @@ func EvalCurPos(eig_min, eig_max[]float64, dicMkt map[string]float64 )(pos float
 // eval multiple Eigs (by applying "weight")
 func f2_evalEigs(dm_eigs [][]float64)(so []float64){
 	dm_eigs_T := TranposeDm(dm_eigs)
-	fmt.Printf("#############: dm_eigs: %v, dm_eigs_T:%v  \n", dm_eigs, dm_eigs_T)
 
 	for i, evtEig := range dm_eigs_T{
 		so = append(so, f2_evalOnEig(evtEig) )
-		fmt.Printf(" #1# <f2_evalEigs>, i:%v, evtEig: %v  \n", i, evtEig)
 	}
-	fmt.Printf(" #2# <f2_evalEigs>, so: %v \n", so)
+	//fmt.Printf("===> <f2_evalEigs>, so: %v \n", so)
 	return
 }
 
@@ -129,7 +127,7 @@ func f2_evalOnEig(dm_evt []float64 )(sum float64){
 		eva := w_scr[j] * v
 		sum += eva
 	}
-	fmt.Printf("### <f2_evalOnEig> w_scr: %v, sum:%v  \n", w_scr, sum)
+	fmt.Printf("---> <f2_evalOnEig> w_scr: %v, sum:%v  \n", w_scr, sum)
 	return
 }
 
@@ -146,7 +144,7 @@ func Chrp( )(crz_slc, hot_slc, puc_slc, rlx_slc []float64, eigMin, eigMax []floa
 	DmAppend(&dm_eigAll, dmEigHot)
 	DmAppend(&dm_eigAll, dmEigCrz)
 	DmClean(&dm_eigAll)
-	fmt.Printf("Info: <Chrp>, dm_eigAll: %v   \n", dm_eigAll)
+	//fmt.Printf("Info: <Chrp>, dm_eigAll: %v   \n", dm_eigAll)
 
 	// step 1: get min_max
 	min_cha, max_cha := GetMinMax( dm_eigAll )               // (min, max []float64)
