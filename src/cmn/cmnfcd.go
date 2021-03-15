@@ -549,8 +549,8 @@ func mktRaw2dict(dateTag string, dicRaw map[string]float64)(dicMkt map[string]fl
 	dicMkt["pe_total"],  dicMkt["pe_sz"]  = pe_total,  pe_sz
 	dicMkt["pb_total"],  dicMkt["pb_sz"]  = pb_total,  pb_sz
 	dicMkt["tnr_total"], dicMkt["tnr_sz"] = tnr_total, tnr_sz
-	fmt.Printf("Info: cmc_sh: %v,cmc_sz: %v,cmc_szm:%v, cmc_smb:%v, cmc_gem:%v  \n", cmc_sh, cmc_sz, cmc_szm, cmc_smb, cmc_gem )
-	fmt.Printf("### pe_tatal: %v, wei_sh: %v, wei_sz:%v  \n", pe_total, wei_sh,  wei_sz)
+	fmt.Printf("Info: <mktRaw2dict> cmc_sh: %v,cmc_sz: %v,cmc_szm:%v, cmc_smb:%v, cmc_gem:%v  \n", cmc_sh, cmc_sz, cmc_szm, cmc_smb, cmc_gem )
+	fmt.Printf("Info: <mktRaw2dict> pe_tatal: %v, wei_sh: %v, wei_sz:%v  \n", pe_total, wei_sh,  wei_sz)
 	return
 }
 

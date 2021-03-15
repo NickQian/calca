@@ -84,15 +84,18 @@ func GetKline(indexType, dayStart, dayEnd string)(kline []float64){
 }
 
 // use <GetMarket> to update "Today" info
-func MarketUpdate(a *T_A) (suc bool){
-        resDic := GetMarket(Today)
-        if len(resDic) == 0{
-        	fmt.Println("Error: <MarketUpdate> result is empty. Maybe internet access problem or not trade day.")
-        	return false
-        }
-        FilDicToA(resDic, a)
-        fmt.Println("<MarketUpdate> done. Result:", suc)
-	return true
+func GetCurMarket_raw() (resDic map[string]float64){
+	// find a recent valid trade day
+	validDays := GetTradeDays(Today)
+	if CurDay := validDays[len(validDays)-1]; CurDay==""{
+		panic("ERROR: <GetCurMarket_raw> CurDay is nil. ")
+	}else {
+	        resDic = GetMarket( CurDay )
+                if len(resDic) == 0{
+	        	fmt.Println("Error: <GetCurMarket_raw> result is empty. Maybe internet access problem or not trade day.")
+        	}
+	}
+	return
 }
 
 
@@ -103,26 +106,26 @@ func GetMarket(day string)(dicmkt map[string]float64){
         if len(dicmkt) == 0{
 		fmt.Println("Error: <GetMarket> result dicmkt is empty. Maybe internet problem or not trade day. ")
         }
-        fmt.Printf("Info: <qif.go> --> <GetMarket> dicmkt: %v   \n ", dicmkt)
+        //fmt.Printf("Info: <qif.go> --> <GetMarket> dicmkt: %v   \n ", dicmkt)
 	return 	dicmkt
 }
 
 
-func FilDicToA(dicmkt map[string]float64, a *T_A)(bool){
+func FilDicToA(dicmkt map[string]float64, a *T_A, tag string)(bool){
         if len(dicmkt) >0 {
-	        a.Cmc.Cmc_sh, a.Cmc.Cmc_sz, a.Cmc.Cmc_gem = dicmkt["cmc_sh"], dicmkt["cmc_sz"], dicmkt["cmc_gem"]
-	        // Note: Cmc_sz include Cmc_gem
-        	a.Cmc.Cmc_total = a.Cmc.Cmc_sh + a.Cmc.Cmc_sz
-        	wei_sh, wei_sz := a.Cmc.Cmc_sh/a.Cmc.Cmc_total, a.Cmc.Cmc_sz/a.Cmc.Cmc_total
+        	a.Evt_Tag = tag
+		// Cmc. Note that Cmc_sz doesn't includes Cmc_gem/Cmc_smb before 2015.5.20
+	        a.Cmc.Cmc_sh, a.Cmc.Cmc_smb, a.Cmc.Cmc_gem = dicmkt["cmc_sh"],   dicmkt["cmc_smb"], dicmkt["cmc_gem"]
+        	a.Cmc.Cmc_total, a.Cmc.Cmc_sz              = dicmkt["cmc_toal"], dicmkt["cmc_sz"]        // these 2 have been processed
 
-        	a.Pe.Pe_sh,   a.Pe.Pe_sz,  a.Pe.Pe_hs300,  a.Pe.Pe_gem   = dicmkt["pe_sh"], dicmkt["pe_sz"], dicmkt["pe_hs300"], dicmkt[ "pe_gem"]
-		a.Pe.Pe_total   = a.Pe.Pe_sh  *  wei_sh +  a.Pe.Pe_sz  *  wei_sz
+        	a.Pe.Pe_sh,    a.Pe.Pe_hs300, a.Pe.Pe_smb, a.Pe.Pe_gem = dicmkt["pe_sh"], dicmkt["pe_hs300"], dicmkt[ "pe_smb"], dicmkt[ "pe_gem"]
+		a.Pe.Pe_total, a.Pe.Pe_sz                  = dicmkt["pe_total"], dicmkt["pe_sz"]
 
-        	a.Pb.Pb_sh,   a.Pb.Pb_sz, a.Pb.Pb_hs300,   a.Pb.Pb_gem    = dicmkt["pb_sh"],dicmkt["pb_sz"], dicmkt["pb_hs300"], dicmkt[ "pb_gem"]
-		a.Pb.Pb_total   = a.Pb.Pb_sh  *  wei_sh +  a.Pb.Pb_sz  *  wei_sz
+        	a.Pb.Pb_sh,    a.Pb.Pb_hs300, a.Pb.Pb_smb, a.Pb.Pb_gem  = dicmkt["pb_sh"], dicmkt["pb_hs300"], dicmkt["pb_smb"], dicmkt[ "pb_gem"]
+		a.Pb.Pb_total, a.Pb.Pb_sz                  = dicmkt["pb_total"], dicmkt["pb_sz"]
 
-	        a.Tnr.Tnr_sh, a.Tnr.Tnr_sz,a.Tnr.Tnr_hs300,a.Tnr.Tnr_gem = dicmkt["tnr_sh"],dicmkt["tnr_sz"],dicmkt["tnr_hs300"], dicmkt["tnr_gem"]
-		a.Tnr.Tnr_total = a.Tnr.Tnr_sh * wei_sh +  a.Tnr.Tnr_sz * wei_sz
+	        a.Tnr.Tnr_sh,  a.Tnr.Tnr_hs300, a.Tnr.Tnr_smb, a.Tnr.Tnr_gem = dicmkt["tnr_sh"], dicmkt["tnr_hs300"], dicmkt["tnr_smb"], dicmkt["tnr_gem"]
+		a.Tnr.Tnr_total, a.Tnr.Tnr_sz              = dicmkt["tnr_total"], dicmkt["tnr_sz"]
 
 		//mtss_sh, mtss_sz := dicmkt["mtss_sh"], dicmkt["mtss_sz"]
         	//a.Mtsr.Mtsr_total = 100*(mtss_sh + mtss_sz)/a.Cmc.Cmc_total
@@ -143,7 +146,7 @@ func GetTradeDays(date string)(days []string){
 	//if days, ok := I_days.([]string); ok{
 	if len(I_days) > 0{
 		days = I_days
-	        fmt.Print("Info: <qif.go> -> <GetTradeDays>:", days)
+	        fmt.Printf("Info: <qif.go> -> <GetTradeDays>: %v  \n", days)
 	}else{
 		fmt.Print(ErrNoDataReturn)
 	}
@@ -385,5 +388,6 @@ func GetCurVolr()(o T_volr, err error){
         o = GetVolr(Today)
         return o, nil
 }
+
 
 

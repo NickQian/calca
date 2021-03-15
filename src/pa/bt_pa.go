@@ -89,18 +89,23 @@ func f1_weight_cha()(w []float64 ){
 //---------------------------- level 2: f2 : 估值函数 ------------------------------
 // [Normalization] + [Weight]
 func EvalCurPos(eig_min, eig_max[]float64, dicMkt map[string]float64 )(pos float64){
-	var dicMktS map[string](map[string]float64)
-	dicMktS["today"] = dicMkt
+	var dicMktS = make(map[string](map[string]float64) )
+	dicMktS["dummyTag1"] = dicMkt
+	//dicMktS["dummyTag2"] = dicMkt
 
 	dm := Eggs2Dm(dicMktS)                                  // dm is [][]float64
+	DmClean(&dm)             				// clean before use
+	fmt.Printf("Info: <EvalCurPos>  dm: %v \n", dm)
 
 	// step 2: Normalize it bases on eig_min, eig_max
 	d_p := Norm_EvtsDm(dm, eig_min, eig_max)           // dm[0] is 1d slice
+	fmt.Printf("Info: <EvalCurPos>  d_p: %v \n", d_p)
 
 	// step 3: weight it
-	pos = f2_evalOnEig(d_p[0])
+	pos_slc := f2_evalEigs(d_p)
+	fmt.Printf("@ : <EvalCurPos>  pos_slc: %v \n", pos_slc)
 
-	return
+	return pos_slc[0]
 }
 
 
@@ -108,7 +113,7 @@ func EvalCurPos(eig_min, eig_max[]float64, dicMkt map[string]float64 )(pos float
 func f2_evalEigs(dm_eigs [][]float64)(so []float64){
 	dm_eigs_T := TranposeDm(dm_eigs)
 
-	for i, evtEig := range dm_eigs_T{
+	for _, evtEig := range dm_eigs_T{
 		so = append(so, f2_evalOnEig(evtEig) )
 	}
 	//fmt.Printf("===> <f2_evalEigs>, so: %v \n", so)
@@ -127,7 +132,7 @@ func f2_evalOnEig(dm_evt []float64 )(sum float64){
 		eva := w_scr[j] * v
 		sum += eva
 	}
-	fmt.Printf("---> <f2_evalOnEig> w_scr: %v, sum:%v  \n", w_scr, sum)
+	//fmt.Printf("--> <f2_evalOnEig> w_scr: %v, sum:%v  \n", w_scr, sum)
 	return
 }
 
