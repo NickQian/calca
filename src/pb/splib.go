@@ -24,9 +24,9 @@ import (
 func KlinePreprc(kline []float64)(kp []float64){
         fmt.Printf("Info: <KlinePreprc> len of kline: %v, PAD_LEN: %v \n", len(kline), dfn.FFT_FLT_PAD_LEN )
 
-        kln     := GetLnK(kline)
-        kl, _   := RmvIniDc(kln)
-        //kl, _   := RmvIniDc(kline)
+        //kln     := GetLnK(kline)
+        //kl, _   := RmvIniDc(kln)
+        kl, _   := RmvIniDc(kline)
 
 	//kp = kl
 	kp = PadHeadEnd(kl, 0,  //int(dfn.FFT_FLT_PAD_LEN * float64(len(kline)) ),
@@ -72,11 +72,12 @@ func PadHeadEnd(k []float64, L_pad_Head, L_pad_End int)(kpad []float64){
 
 	H_k  := append(padH, k...)
 	kpad =  append(H_k, padE...)
-	fmt.Println("@@@@@: kpad: ", kpad)
+	fmt.Println("Info: k padded: ", kpad)
 
 	return
 }
 
+/*
 // abs, then div Len()
 func GetCmplxAmp(cin []complex128)(fo [] float64){
 	for _, v := range cin{
@@ -93,6 +94,7 @@ func GetFreqAxis(cin []complex128)(faxis []float64){
 	}
 	return
 }
+*/
 
 
 // generate the window to extract Low Freq
@@ -100,6 +102,10 @@ func GenWin(L int, l_win int, winFunc func(int)[]float64 )(win []float64){
 	win_org := winFunc(l_win)
 	pad := make([]float64, L - l_win)
 	win = append(win_org, pad...)
+
+	fmt.Printf("@@@ win generated is: %v  \n ", win)
+	PlotSlicef(win_org, "time", "window", "window_gen.png")
+
 	return
 }
 

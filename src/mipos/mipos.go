@@ -17,6 +17,8 @@ import (
         "cmn"
         "fmt"
 	. "define"
+	"qif"
+	//"plotit"
         )
 
 
@@ -53,50 +55,78 @@ func Mipos(policy string)( cwRes T_Mipos){
 }
 
 
-
+// call by "fup" manually. <Mipos_Daily_Pa> will do daily update
 func Mipos_Pa()(cwRes T_Mipos){
 	// step 1: get c.h.r.p values from eig
-	//crz, hot, puc, rlx, eigMin, eigMax := pa.Chrp(FN_EGG_BOT_RLX,FN_EGG_BOT_PUC,FN_EGG_TOP_CRZ,FN_EGG_TOP_HOT)
 	crz, hot, puc, rlx, cha_min, cha_max := pa.Chrp( )
 
 	// step 2: get current market
-	dicMkt  := cmn.GetCurMarket()
+	days    := qif.GetTradeDays(cmn.TodayStr, LEN_MIPOS_K)
+
 	// step 3: eval current market
-	pos     := pa.EvalCurPos(cha_min, cha_max, dicMkt )
+	for i, day := range days[:len(days)-1]{     // last day = today; there's no today data
+		dicMkt     := cmn.GetMarket(day)
+		pos        := pa.EvalPos(cha_min, cha_max, dicMkt )
+		cwRes.Poslc = append(cwRes.Poslc, pos)
+		cmn.Delay_Qif_Intvl( )
+		fmt.Printf("#####<Mipos_Pa> i:%v, day:%v, cwRes.Poslc: %v   \n", i, day, cwRes.Poslc)
+	}
 
 	cwRes.BotRlx = rlx
         cwRes.BotPuc = puc
         cwRes.TopHot = hot
-        cwRes.TopCrz = crz          // []float64
+        cwRes.TopCrz = crz                  		   // []float64
+	cwRes.Pos    = cwRes.Poslc[len(cwRes.Poslc)-1]     // last
 	gnd, _      := cmn.GetMinMax_1d(rlx)
 	_,  vcc     := cmn.GetMinMax_1d(crz)
-        cwRes.Gnd    = gnd         //   float64
+        cwRes.Gnd    = gnd         		    	   //   float64
         cwRes.Vcc    = vcc
-        cwRes.Cw_pos = pos
 	halfLen      := (vcc - gnd)/2
 	cwRes.Eqpo   = halfLen + gnd
-        if pos > cwRes.Eqpo {
-		cwRes.Ti = (cwRes.Cw_pos - cwRes.Eqpo)/halfLen
+        if cwRes.Pos > cwRes.Eqpo {
+		cwRes.Ti = (cwRes.Pos - cwRes.Eqpo)/halfLen
 		cwRes.Bi = 0
 
 	}else{
-		cwRes.Bi = (cwRes.Eqpo - cwRes.Cw_pos)/halfLen
+		cwRes.Bi = (cwRes.Eqpo - cwRes.Pos)/halfLen
         	cwRes.Ti =  0
 	}
 
 	return
 }
 
+func Mipos_Daily_Pa()(float64){
+
+	// get cha_min/max
+        _, _, _, _, cha_min, cha_max := pa.Chrp( )
+
+        // step 2: get current market
+        dicMkt  := cmn.GetCurMarket()
+
+        // step 3: eval current market
+        pos     := pa.EvalPos(cha_min, cha_max, dicMkt )
+
+	return pos
+}
 
 
+//---------------------------- PB ----------------------------------------
 func Mipos_Pb( )(cwRes T_Mipos ){
 	fmt.Print("Starting <Mipos_Pb> ...")
 	return
 }
 
 
+
+//----------------------------- PC ---------------------------------------
 func Mipos_Pc()( cwRes T_Mipos ){
         return
 }
 
 
+
+
+//---------------------------------------------------
+func miposDataRW()bool{
+	return true
+}

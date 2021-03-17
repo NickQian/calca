@@ -468,7 +468,7 @@ func GetBtsData(fn_bt string, fn_rec_data, fn_avg_data string)(eggs map[string](
                 for j_day, day := range win{    //--> In a event
                 	fmt.Printf("Info:(stp 1): i_evt:%v, j_win:%v, day:%v   \n", i_evt, j_day, day)
 		        time.Sleep(QIF_ACCESS_INTVL * time.Millisecond)
-			dicmkt_raw := qif.GetMarket(day)
+			dicmkt_raw := qif.GetMarket_raw(day)
 			dicmkt := mktRaw2dict(day, dicmkt_raw)
 
                         if len(dicmkt ) != 0{
@@ -495,7 +495,7 @@ func GetBtsData(fn_bt string, fn_rec_data, fn_avg_data string)(eggs map[string](
 }
 
 
-
+// use <mktRaw2dict> to generate the *_total parameters
 func GetCurMarket()(map[string]float64) {
 	dicRaw := qif.GetCurMarket_raw()
 	dicMkt := mktRaw2dict(TodayStr, dicRaw)
@@ -503,6 +503,17 @@ func GetCurMarket()(map[string]float64) {
 }
 
 
+func GetMarket(day string)(map[string]float64){
+	dicRaw := qif.GetMarket_raw(day)
+        dicMkt := mktRaw2dict(day, dicRaw)
+	return dicMkt
+
+}
+
+//func GetMarketBk( num_back int)(SlcDic[](map[string]float64)){
+//	
+//
+//}
 
 
 func mktRaw2dict(dateTag string, dicRaw map[string]float64)(dicMkt map[string]float64){
@@ -746,7 +757,7 @@ func GetBtsDate(fnbtdate string)(o [][]string){
 
 // use qif to get a bot/top window valid trade days
 func GetBtWindow(date string)(validTradeDays []string){
-	return qif.GetTradeDays(date)
+	return qif.GetTradeDays(date, PRE_SMP_NUM)
 }
 
 
@@ -809,4 +820,10 @@ func ReverseSlc(s []float64)([]float64){
 		s[i], s[j] = s[j], s[i]
 	}
 	return s
+}
+
+func Delay_Qif_Intvl()(){
+
+        time.Sleep(QIF_ACCESS_INTVL * time.Millisecond)
+	return
 }

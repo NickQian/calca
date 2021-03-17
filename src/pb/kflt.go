@@ -16,6 +16,7 @@ import (
 	"cmn"
 	"fmt"
 	"qif"
+	. "plotit"
 	)
 
 
@@ -44,9 +45,9 @@ func FltK(kl []float64)( kf []float64){
 	Y_w := KlineFa(kl)
 	PlotFa(Y_w, "FltK_Fa.png")
 
-	// 2) Gen win -> W_w
-	win := GenWin(len(kl), dfn.FFT_FLT_INTEREST_PTS, window.Rectangular)  // Hamming/Hann/Bartlett/Rectangular/FlatTop/Blackman
-	//fmt.Printf("### 1: win###: %v  \n", win)
+	// 2) Gen win -> W_w |  // Hamming/Hann/Bartlett/Rectangular/FlatTop/Blackman
+	//win := GenWin(len(kl), dfn.FFT_FLT_INTEREST_PTS, window.Rectangular)
+	win := GenWin(len(kl), dfn.FFT_FLT_INTEREST_PTS, window.Hamming)
 
 	// 3) Multi -> YL_w
 	YL_w := MultYW(Y_w, win)

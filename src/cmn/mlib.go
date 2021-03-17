@@ -10,6 +10,7 @@ package cmn
 
 import(
         "math"
+	"math/cmplx"
 	//"testing"
         "fmt"
 )
@@ -250,7 +251,7 @@ func varinit_2d(din [][]float64)(o []float64){
 }
 
 
-// T the matrix
+// Tranpose the matrix
 func TranposeDm(dm [][]float64)(dmT [][]float64){
 	for n := 0; n < len(dm[0]); n++{
 		var rowT []float64
@@ -265,3 +266,29 @@ func TranposeDm(dm [][]float64)(dmT [][]float64){
 	}
 	return
 }
+
+
+//
+
+// abs, then div Len()
+func GetCmplxAmp(cin []complex128)(fo [] float64){
+        for _, v := range cin{
+                fo = append(fo, cmplx.Abs(v) / (float64(len(cin)) /2.0) )
+        }
+        return
+}
+
+
+func GetFreqAxis(cin []complex128)(faxis []float64){
+        Fs := 1
+        for i, _ := range cin{
+                faxis = append(faxis, float64(i*Fs)/float64(len(cin))  )
+        }
+        return
+}
+
+
+
+
+
+

@@ -88,7 +88,7 @@ func f1_weight_cha()(w []float64 ){
 
 //---------------------------- level 2: f2 : 估值函数 ------------------------------
 // [Normalization] + [Weight]
-func EvalCurPos(eig_min, eig_max[]float64, dicMkt map[string]float64 )(pos float64){
+func EvalPos(eig_min, eig_max[]float64, dicMkt map[string]float64 )(pos float64){
 	var dicMktS = make(map[string](map[string]float64) )
 	dicMktS["dummyTag1"] = dicMkt
 	//dicMktS["dummyTag2"] = dicMkt

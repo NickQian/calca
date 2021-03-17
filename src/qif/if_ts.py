@@ -10,6 +10,8 @@
 import datetime
 import tushare as ts
 
+ts.set_token('7aaef57854cac90bf596075e9cd60d0c256b62477e312aa509069fcd')
+print("@:Python Info: Token already set. tushare pro version:", ts.__version__)
 
 pro = ts.pro_api()
 
@@ -132,7 +134,7 @@ def getMarketMap(day):
 # ts: only valid from 20040105??
 def getMarket(date):
 	df = pro.index_dailybasic(trade_date= date)               # , fields='ts_code,trade_date,turnover_rate,pe')
-	print("# date, df:", date, df)
+	#print("# date, df:", date, df)
 	return df
 
 
