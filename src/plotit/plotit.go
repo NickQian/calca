@@ -98,6 +98,7 @@ func PlotMipos(cw dfn.T_Mipos) bool {
         p, _ := plot.New()
         pts_crz, pts_hot, pts_puc, pts_rlx, pts_pos := makeXY_Evts(cw)          // the difference
         plotutil.AddLinePoints(p, pts_crz, pts_hot, pts_puc, pts_rlx, pts_pos )
+        fmt.Printf("#### pts_crz: %v, pts_hot:%v, pts_puc:%v, pts_rlx:%v, pts_pos:%v  \n", pts_crz, pts_hot, pts_puc, pts_rlx, pts_pos )
 
         p.Title.Text   = "mipos_result"
         p.X.Label.Text = "Day"
@@ -109,37 +110,33 @@ func PlotMipos(cw dfn.T_Mipos) bool {
 
 
 func makeXY_Evts(cw dfn.T_Mipos)(pts_crz, pts_hot, pts_puc, pts_rlx, pts_pos plotter.XYs){
-        pts_crz = make(plotter.XYs, dfn.LEN_MIPOS_K)
-        pts_hot = make(plotter.XYs, dfn.LEN_MIPOS_K)
-        pts_puc = make(plotter.XYs, dfn.LEN_MIPOS_K)
-        pts_rlx = make(plotter.XYs, dfn.LEN_MIPOS_K)
-        pts_pos = make(plotter.XYs, dfn.LEN_MIPOS_K)
+        pts_crz = make(plotter.XYs, len(cw.TopCrz) )  //dfn.LEN_MIPOS_K)
+        pts_hot = make(plotter.XYs, len(cw.TopHot) )
+        pts_puc = make(plotter.XYs, len(cw.BotPuc) )
+        pts_rlx = make(plotter.XYs, len(cw.BotRlx) )
+        pts_pos = make(plotter.XYs, len(cw.Poslc)  )
 
         for i, _ := range cw.Poslc{
                 if ( i < len(cw.TopCrz) ){
-                        //fmt.Printf("#### len(kl): %v, x:%v, y:%v  \n", len(x), x[i], y[i] )
                         pts_crz[i].X, pts_crz[i].Y = float64(i), cw.TopCrz[i]
+                        fmt.Printf("#### cw.TopCrz: %v, i:%v, pts_crz:%v  \n", cw.TopCrz, i, pts_crz )
                 }
 
 		if ( i < len(cw.TopHot) ){
-                        //fmt.Printf("#### len(kl): %v, x:%v, y:%v  \n", len(x), x[i], y[i] )
                         pts_hot[i].X, pts_hot[i].Y = float64(i), cw.TopHot[i]
                 }
 
 		if ( i < len(cw.BotPuc) ){
-                        //fmt.Printf("#### len(kl): %v, x:%v, y:%v  \n", len(x), x[i], y[i] )
                         pts_puc[i].X, pts_puc[i].Y = float64(i), cw.BotPuc[i]
                 }
 
 
 		if ( i < len(cw.BotRlx) ){
-                        //fmt.Printf("#### len(kl): %v, x:%v, y:%v  \n", len(x), x[i], y[i] )
                         pts_rlx[i].X, pts_rlx[i].Y = float64(i), cw.BotRlx[i]
                 }
 
 
 		if ( i < len(cw.Poslc) ){
-                        //fmt.Printf("#### len(kl): %v, x:%v, y:%v  \n", len(x), x[i], y[i] )
                         pts_pos[i].X, pts_pos[i].Y = float64(i), cw.Poslc[i]
                 }
 
