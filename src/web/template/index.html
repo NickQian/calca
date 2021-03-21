@@ -27,10 +27,10 @@
 	
 <table border="1">
     <tr>
-        <td>Scan Res: {{.res.sug[0]}}，{{.res.sug[1]}}，{{.res.sug[2]}} </td>   
+        <td>Scan Res: {{.res.sug_0}}, {{.res.sug_1}}, {{.res.sug_2}}</td>   
     </tr>
 	<tr>
-        <td>{{.res.sug[3]}}, {{.res.sug[4]}}, {{.res.sug[5]}}, {{.res.sug[6]}}, {{.res.sug[7]}}, {{.res.sug[8]}} </td>   
+        <td>{{.res.sug_3}}, {{.res.sug_4}}, {{.res.sug_5}}, {{.res.sug_6}}, {{.res.sug_7}}, {{.res.sug_8}} </td>   
     </tr>
 </table>
 
@@ -47,5 +47,7 @@
 版权 © calca </div>
 
 </body>
+
+{{template "footer.html" . }}
 </html>
 
