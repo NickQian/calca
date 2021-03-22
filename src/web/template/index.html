@@ -1,11 +1,3 @@
-<p>{{.studentContent}}<span>{{.studentId}}</span></p>
-
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>calca程序运行状态界面</title>
-</head>
 <body>
 
 <div id="header" style="background-color:#7E735F;color:white;"> <!-- "background-color:#0xE0EbF5;color:0x375EAB;"  --> 
@@ -13,30 +5,30 @@
 </div>
 
  &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp 
-<span>数据更新： {{.calDate}} </span>
+<span>数据更新： {{.CalDate}} </span>
 	
 <p>-------------------------------------------------------</p>
 <table border="1">
     <tr>
-        <td>bi: {{.res.bi}}  &nbsp &nbsp </td>   
-		<td>ti: {{.res.ti}}  &nbsp &nbsp  </td>   
-		<td>Mix_Casino_Weigher:  {{.res.mixcw_c}} - {{.res.mixcw_w}} </td>   
+        <td>bi: {{.Bi}}  &nbsp &nbsp </td>   
+		<td>ti: {{.Ti}}  &nbsp &nbsp  </td>   
+		<td>Mix_Casino_Weigher:  {{.CW_Casino}} - {{.CW_Weigher}} </td>   
     </tr>
 </table>
+
+<p> <img src="//localhost:9090/images/res_mipos.png"  alt="Mipos Result" widht="320" height="320" >  </p>
+
 <p>-------------------------------------------------------</p>
 	
 <table border="1">
     <tr>
-        <td>Scan Res: {{.res.sug_0}}, {{.res.sug_1}}, {{.res.sug_2}}</td>   
-    </tr>
-	<tr>
-        <td>{{.res.sug_3}}, {{.res.sug_4}}, {{.res.sug_5}}, {{.res.sug_6}}, {{.res.sug_7}}, {{.res.sug_8}} </td>   
+        <td>Scan Res: {{.Scan_res}} </td>   
     </tr>
 </table>
 
 <p>-------------------------------------------------------</p>
 	
-<p>AutoTradeAccu: {{.autoAccu}}   &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp |&nbsp &nbsp &nbsp &nbsp since2019.1.30 </p>
+<p>AutoTradeAccu: {{.SimRes.CurValue }}   &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp |&nbsp &nbsp &nbsp &nbsp since2019.1.30 </p>
 &nbsp &nbsp &nbsp  <br> <hr> <br>
 	
 <a href="http://118.24.165.139:9090/about">About</a> 
@@ -49,5 +41,4 @@
 </body>
 
 {{template "footer.html" . }}
-</html>
 
