@@ -22,45 +22,20 @@ func TestOperateTime(t *testing.T){
 }
 
 
-func TestReadRunData(t *testing.T){
-	rundata, err := ReadRunData(dfn.FN_RUN_DATA)
-	if err != nil{
-		t.Errorf("Err during Testing: <ReadRunData>: Err is  %v ", err)
-	}else{
-		t.Logf("rundata.LastBotDate is: %v, LastTopDate is: %v", rundata.LastBotDate, rundata.LastTopDate)
-	}
-}
-
 
 func TestReadCalRes(t *testing.T){
 	calRes, err := ReadCalRes(dfn.FN_RES_CALC)
 	if err != nil{
 		t.Errorf("Err during Testing:<ReadCalRes>. Err is: %v", err)
 	}else{
-		t.Logf("<ReadCalRes> result Bi: %v, Ti: %v, Scan_res:%v ", calRes.Bi, calRes.Ti, calRes.Scan_res)
-	}
-}
-
-
-func TestReadRrunRes(t *testing.T){
-	rrunRes, err := ReadRrunRes(dfn.Fn_RES_RRUN)
-	if err != nil{
-		t.Errorf("Err during testing:<ReadRrunRes>. Err is: %v", err)
-	}else{
-		t.Logf("CurValue:%v, CurState:%v, CurDate:%v", rrunRes.CurValue, rrunRes.CurState, rrunRes.CurDate)
-		t.Logf("CurCode.Code[0]:%v, CurCode.OrgValue[0]:%v, CurCode.CurValue[0]:%v ;",
-		            rrunRes.CurCode[0].Code, rrunRes.CurCode[0].OrgValue, rrunRes.CurCode[0].CurValue)
-		t.Logf("CurCode.Code[1]:%v, CurCode.OrgValue[1]:%v, CurCode.CurValue[1]:%v ;",
-		            rrunRes.CurCode[1].Code, rrunRes.CurCode[1].OrgValue, rrunRes.CurCode[1].CurValue)
-		t.Logf("CurCode.Code[2]:%v, CurCode.OrgValue[2]:%v, CurCode.CurValue[3]:%v ;",
-		            rrunRes.CurCode[2].Code, rrunRes.CurCode[2].OrgValue, rrunRes.CurCode[2].CurValue)
+		t.Logf("<ReadCalRes> result Bi: %v, Ti: %v, Scan_res:%v ", calRes.Bi, calRes.Ti, calRes.ScanRes)
 	}
 }
 
 
 func TestReadBtDate(t *testing.T){
         //date := ReadBotDate(dfn.FN_BOT_PUC_DATE)
-	date := ReadBtDate(dfn.FN_BOT_RLX_DATE)
+	date := ReadBtDate(dfn.FN_DATE_BOT_RLX)
         if len(date) == 0{
                 t.Logf("Err during Testing: <Get_Bot_Date>: len(d) is  %d ", len(date) )
                 t.Errorf("Err during Testing: <Get_Bot_Date>: len(d) is  %d ", len(date))
@@ -92,14 +67,14 @@ func TestGetBtWindow_raw(t *testing.T){
 
 
 func TestGetBtsDate(t *testing.T){
-        botsDate := GetBtsDate(dfn.FN_BOT_RLX_DATE)
+        botsDate := GetBtsDate(dfn.FN_DATE_BOT_RLX )
         t.Logf("<TestGetBotsDate>: %v ", botsDate)
 }
 
 
 func TestGetBtsData(t *testing.T){
 	//var a = make([]dfn.T_A, 50)
-	eggMaps, _, suc := GetBtsData(dfn.FN_BOT_PUC_DATE, dfn.FN_EVT_REC_DAT, dfn.FN_EVT_AVG_DAT)
+	eggMaps, _, suc := GetBtsData(dfn.FN_DATE_BOT_PUC, dfn.FN_EVT_REC_DAT, dfn.FN_EVT_AVG_DAT)
 	t.Logf("t.Logf <TestGetBtsData> result: %v ", suc)
 	assert.True(t, suc)
 	t.Logf("t.Log <TestGetBtsData>. eggMap: %v ", eggMaps)
@@ -108,6 +83,30 @@ func TestGetBtsData(t *testing.T){
 
 func TestGetEigDm(t *testing.T){
 
-	eigDm, _ := GetEigDm(dfn.FN_EGG_BOT_RLX, dfn.FN_EGG_BOT_PUC, dfn.FN_EGG_TOP_CRZ, dfn.FN_EGG_TOP_HOT)
-	t.Log("<TestGetEigDm> result: ", eigDm)
+	dmEigRlx, dmEigPuc, dmEigHot, dmEigCrz, _ := GetEigDm(dfn.FN_EGG_BOT_RLX, dfn.FN_EGG_BOT_PUC, dfn.FN_EGG_TOP_CRZ, dfn.FN_EGG_TOP_HOT)
+	t.Log("<TestGetEigDm> result: ", dmEigRlx, dmEigPuc, dmEigHot, dmEigCrz)
 }
+
+
+
+func TestReadResTrd(t *testing.T){
+	resTrd, err := ReadResTrd(dfn.FN_RES_TRD)
+	if err != nil{
+		t.Errorf("Err during testing:<ReadRrunRes>. Err is: %v", err)
+	}else{
+		t.Logf(" @resTrd: %v", resTrd )
+	}
+}
+
+
+func TestReadLastOp(t *testing.T){
+	lastOpDat, err := ReadLastOp(dfn.FN_TRD_LAST_OP)
+	if err != nil{
+		t.Errorf("Err during Testing: <ReadRunData>: Err is  %v ", err)
+	}else{
+		t.Logf(" @ lastOpDat is: %v", lastOpDat )
+	}
+}
+
+
+

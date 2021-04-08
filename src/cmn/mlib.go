@@ -35,7 +35,7 @@ func SimpleAvg_Eggmap(mapIn map[string](map[string]float64) )(avg_mout map[strin
 	var avgPe, avgPb, avgTnr float64 = 0.0, 0.0, 0.0
 
 	for tag, evtMap := range mapIn{
-		fmt.Printf("@ SimpleAvg_map: tag:%v, evt[pe_total]:%v,[pb_total]:%v,[tnr_total]: %v  \n", tag, evtMap)
+		fmt.Printf("@ SimpleAvg_map: tag:%v, evtMap :%v  \n", tag, evtMap)
 		avgPe  += evtMap["pe_total"]
 		avgPb  += evtMap["pb_total"]
 		avgTnr += evtMap["tnr_total"]

@@ -26,6 +26,7 @@ import (
         )
 
 
+//-------------------------- global var ------------------------------------
 //var T *testing.T = &testing.T{}
 var Log *log.Logger
 var T_Now time.Time
@@ -63,7 +64,10 @@ var BotA = &T_A_BT{PeMap   : make(map[string]float64),
 var Print func(a ...interface{}) (n int, err error)  = fmt.Println
 
 
-
+//------------------------------ init ------------------------------------
+// init funcs
+//
+//------------------------------------------------------------------------
 func init(){
         if logfile, err := os.OpenFile(RUN_DIR+"run.log",os.O_APPEND|os.O_CREATE, 666); err == nil{
 	        Log = log.New(logfile, "", log.Ldate | log.Ltime)
@@ -71,6 +75,7 @@ func init(){
         }else{
                 panic("<cmnfd-init> Open logfile error")
         }
+
 
 	timeLocation, _ = time.LoadLocation("Asia/Shanghai")
 
@@ -110,7 +115,7 @@ func initLogger()(error){
 }
 
 
-//----------------------------------------------------------------------
+//---------------------------- READ --------------------------------------
 // read bottom or top date.
 // Bottom date will be set manually in the "date/bot_date" file
 //------------------------------------------------------------------------
@@ -150,25 +155,12 @@ func ReadBtDate(fn string)(o []string){
 /* []interface{}<-Json array; map[string]interface <- json obj; nil<- Json nul
 /*-----------------------------------------------------------------------------------------*/
 
-func ReadRunData(fn_rundata string)(rundata T_Rundata, err error){
-        rdIf, err := JsonReadUnmash(fn_rundata)
-      	rundata = JsonExtr_Rundata(rdIf)
-	return
-}
 
-
+// read calca(analyze data) res
 func ReadCalRes(fn_calRes string) (calRes T_CalRes, err error){
         rdIf, err := JsonReadUnmash(fn_calRes)
        	calRes = JsonExtr_CalRes(rdIf)
 	return
-}
-
-
-// read real run result
-func ReadRrunRes(fn_RrunRes string) (rrunRes T_SimRes, err error){
-        rdIf, err := JsonReadUnmash(fn_RrunRes)
-        rrunRes = JsonExtr_RrunRes(rdIf)
-        return
 }
 
 
@@ -184,10 +176,21 @@ func ReadEgg(fn_egg string)( map[string](map[string]float64)  ){
 
 
 
-/*******************************************************************************
-/*----------- read file, output "map" ---------------------------
-// read
-/*********************************************************************************/
+func ReadResTrd(fn_resTrd string)(resTrd T_ResTrd, err error){
+        rdIf, err := JsonReadUnmash(fn_resTrd)
+      	resTrd = JsonExtr_ResTrd(rdIf)
+	return
+}
+
+// read real run result
+func ReadLastOp(fn_LastOp string) (lastOpDat T_LastOp, err error){
+        rdIf, err := JsonReadUnmash(fn_LastOp)
+        lastOpDat = JsonExtr_LastOp(rdIf)
+        return
+}
+
+
+//------------ basic read -------------------
 func JsonReadUnmash(fn_json string)(rdmapIf map[string]interface{}, err error){
         rbytes, err := ReadFile(fn_json)
 	var rdIf interface{}           // left of assertion must be interface{}
@@ -206,7 +209,7 @@ func JsonReadUnmash(fn_json string)(rdmapIf map[string]interface{}, err error){
         return runIf, nil
 }
 
-//---------------- interface extract --------------------------------
+//--- interface extract ----
 // eig(egg) -> evts -> cha(1 evt) -> item
 // jason read -> map
 func JsonExtr_toMap(rdEggIf map[string]interface{} )(egg map[string](map[string]float64) ){
@@ -230,27 +233,6 @@ func JsonExtr_toMap(rdEggIf map[string]interface{} )(egg map[string](map[string]
 	return
 }
 
-func JsonExtr_Rundata(runIf map[string]interface{})(rundata T_Rundata){
-        for k, v := range runIf{
-        	//type assetion to use interface
-		switch k{     //switch vt := v.(type){
-		case "LastTop":
-            		vt_if, _ := v.(map[string]interface{})
-			for key, value := range vt_if{
-		   		if key == "date"{ rundata.LastTopDate = value.(string) }
-		        }
-		case "LastBot":
-            		vb_if, _ := v.(map[string]interface{})
-			for key, value := range vb_if{
-				if key == "date"{ rundata.LastBotDate = value.(string)}
-		        }
-		default:
-			fmt.Println("#Info: other json key that not processed.")
-		}//switch
-        }//for
-        return
-}
-
 
 func JsonExtr_CalRes(calResIf map[string]interface{})(calRes T_CalRes){
         for k, v := range calResIf{
@@ -266,11 +248,11 @@ func JsonExtr_CalRes(calResIf map[string]interface{})(calRes T_CalRes){
 	        	v_scan_if, _ := v.([]interface{})
       			fmt.Println("Info: scan_res type:",  reflect.TypeOf(v_scan_if).String())
                         for index, value := range v_scan_if{
-                        	calRes.Scan_res[index]    = int(value.(float64))
+                        	calRes.ScanRes[index]    = int(value.(float64))
                         }
 		case "rrun_res":
 			fmt.Println("Info: rrun_res type:", reflect.TypeOf(v).String())
-			calRes.Rrun_res = v.(float64)
+			calRes.TrdRes.Acc = v.(int)
                 default:
                 	fmt.Println("#Info: other json key that not processed.")
                 }//switch
@@ -279,42 +261,97 @@ func JsonExtr_CalRes(calResIf map[string]interface{})(calRes T_CalRes){
 }
 
 
-// RrunRes uses the same data struct of simulation
-func JsonExtr_RrunRes(rrunResIf map[string]interface{})(rrunRes T_SimRes){ // assert 1: map[string]interface{}
-	for k, v := range rrunResIf{
+// resTrd uses the same data struct of simulation
+func JsonExtr_ResTrd(resTrdIf map[string]interface{})(resTrd T_ResTrd){
+	for k, v := range resTrdIf{				       // assert 1: the whole map
         	switch k{
-		case "curValue":
-			rrunRes.CurValue = int(v.(float64))
-		case "curState":
-			rrunRes.CurState = v.(string)
-		case "date":
-			rrunRes.CurDate  = v.(string)
+		case "acc":
+			resTrd.Acc = int(v.(int))
+		case "update":
+			resTrd.Update  = v.(string)
                 case "curCode":
-       	        	v_codes_if, _ := v.([]interface{})                 // assert 2:  []interface{}
+       	        	v_codes_if, _ := v.(map[string]interface{})        // assert 2:  []interface{}
 			fmt.Println("Info: v_codes_if type:",  reflect.TypeOf(v_codes_if).String())
-                       	for i_arr, arr := range v_codes_if{
-                               	v_code_if, _ := arr.([]interface{})        // assert 3:  []interface{}
-                                for i_cinfo, cinfo := range v_code_if{     // see dfn.T_CodeInfo
-                                       if i_cinfo == 0{ rrunRes.CurCode[i_arr].Code      = cinfo.(string) }
-                                       if i_cinfo == 1{ rrunRes.CurCode[i_arr].OrgValue  = int(cinfo.(float64)) }
-                                       if i_cinfo == 2{ rrunRes.CurCode[i_arr].CurValue  = int(cinfo.(float64)) }
-                                }
-                        }//for
+			resTrd.CurCodBnk = CodeBankExtra(v_codes_if)
 		default:
-                	fmt.Println("#Info: <JsonExtr_RrunRes>:other json key that not processed.")
+                	fmt.Println("#Info: <JsonExtr_resTrd>:other json key that not processed.")
 		}// switch
 	}//for
 	return
 }
 
 
-/******************************* write json result ***************************************
-/* write json file  (0777/0644/0640)
-/* Bool<-json Bool;           float64<-Json number;             string<-json string;
-/* []interface{}<-Json array; map[string]interface <- json obj; nil<- Json nul
-/****************************************************************************************/
-//func WriteEvtdata(i_evt int, A_evt []T_A, eggMap map[string]interface{} )(  ){
+func CodeBankExtra(Ifcb map[string]interface{})(cbnk  T_CodeBank){
+	for key_ccode, ccode := range Ifcb{              // iterate in "Current Code"(3 or maore)
+        	v_code_if, _ := ccode.(map[string]interface{})    // assert 3:  []interface{}
+                switch key_ccode{
+                case "curCode1":
+                	cbnk.Code1 = CodeInfoExtra(v_code_if)
+                case "curCode2":
+                        cbnk.Code2 = CodeInfoExtra(v_code_if)
+                case "curCode3":
+                        cbnk.Code3 = CodeInfoExtra(v_code_if)
+                default:
+                        panic ("Error: <JsonExtr_ResTrd> goes in default branch.")
+        	} //case
+     	} //for
+	return
+}
+
+
+func CodeInfoExtra(IfCode map[string]interface{})(cinfo T_CodeInfo){
+	for key, ci := range IfCode{     // interate in code
+		switch key{
+		case "code":
+			cinfo.Code   = ci.(string)
+		case "share":
+			cinfo.Share  = ci.(int)
+		case "inprc":
+	 		cinfo.Inprc  = ci.(float64)
+		case "amount":
+	 		cinfo.Amount = ci.(int)
+		default:
+			panic ("Error: <CodeInfoExtra> goes in default branch.")
+		}
+	}
+	return
+}
+
+
+
+// need ...
+func JsonExtr_LastOp(runIf map[string]interface{})(lastOpDat T_LastOp){
+        for k, v := range runIf{
+        	//type assetion to use interface
+		switch k{
+                case "date":
+                        lastOpDat.Date        = v.(string)
+		case "acc":
+			lastOpDat.Acc         = v.(int)
+        	case "op_evt_type":
+			lastOpDat.Op_evt_type = v.(string)
+		case "buy":
+			v_cbnk_if, _ := v.(map[string]interface{})
+            		lastOpDat.Buy_codbnk  = CodeBankExtra(v_cbnk_if)
+		case "sale":
+			v_cbnk_if, _ := v.(map[string]interface{})
+            		lastOpDat.Sale_codbnk = CodeBankExtra(v_cbnk_if)
+		default:
+			fmt.Println("#Info: other json key that not processed.")
+		}//switch
+        }//for
+        return
+}
+
+
+
+//----------------------------------- WRITE --------------------------------------------
+// write json file  (0777/0644/0640)
+// Bool<-json Bool;           float64<-Json number;             string<-json string;
+// []interface{}<-Json array; map[string]interface <- json obj; nil<- Json nul
+//--------------------------------------------------------------------------------------
 func WriteEvtdata(fn_rec_data, fn_avg_data string, i_evt int, A_evt []T_A, eggMap map[string](map[string]float64) )(  ){
+//func WriteEvtdata(i_evt int, A_evt []T_A, eggMap map[string]interface{} )(  ){
 	fmt.Printf("===> <WriteEvtdata>:  A_evt: %v   \n",  A_evt )
 	fmt.Printf("===> <WriteEvtdata>:   eggMap: %v   \n",   eggMap)
 	if i_evt > 0{
@@ -338,6 +375,21 @@ func WriteEvtWins(evtWin []T_A, fn string, add bool)(err error){
 }
 
 
+func WriteScanRes(sug1, sug2, sug3 string, fn string) (err error) {
+	sugMap := map[int]string{1:sug1, 2:sug2, 3:sug3}
+	jsonBytes := []byte{}
+	if jsonBytes, err = json.MarshalIndent(sugMap, "", "\t"); err == nil{
+                fmt.Println("Info:<WriteScanRes> map转json成功")
+        }else{
+                Print("ERROR: <WriteScanRes> map to Json 出错:", err)
+        }
+
+	err = Wr_Json(jsonBytes, fn)
+	return
+}
+
+
+
 //func WriteEvtAvg(evtAvg map[string]interface{}, fn string, add bool)(err error){
 func WriteEvtAvg(evtAvg map[string](map[string]float64), fn string, add bool)(err error){
 	jsonBytes, err := mapToJson(evtAvg)
@@ -350,6 +402,8 @@ func WriteEvtAvg(evtAvg map[string](map[string]float64), fn string, add bool)(er
 }
 
 
+
+//------------- Json <-> A struct ----------
 // As is "A" struct slice
 func AtoJson(As []T_A)(jsonBytes []byte, err error){
         //jsbyte := []byte
@@ -378,6 +432,8 @@ func mapToJson(m map[string](map[string]float64) )(jsonBytes []byte, err error){
 }
 
 
+
+//-------- basic write ---------
 // ioutil new write
 func Wr_Json(jsonByte []byte, fn string) (err error){
         //        WriteFile(filename string, data[]byte, perm os.FileMode) error
@@ -414,7 +470,7 @@ func Wr_Json_(jsonByte []byte, fn string)(err error){
 
 
 
-/*********************************************************************************************
+/******************************Eig -> Dm *******************************************************
 /* prepare bot/top data(pe_total/volr_total/mtsr_total) to feed trainig(Bottom/top Weighter)
 /*
 /**********************************************************************************************/

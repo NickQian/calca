@@ -15,25 +15,46 @@ import(
 //------------------------------------- res --------------------------------------------------
 
 type T_CalRes struct{
-        Bi              int
-        Ti              int
-	Mix_cw          [2]int
-	Scan_res        [9]int
-        Rrun_res        float64
+	Slogan           string
+        Bi              int           // 0 - 100
+        Ti              int           // 0 - 100
+	CW_Casino       int
+	CW_Weigher      int
+	ScanRes         [9]int
+        CalDate		string
+	TrdRes          T_ResTrd
 }
 
 
-type T_SimRes struct{
-        CurValue        int
-        CurCode         [3]T_CodeInfo
-        CurState        string
-        CurDate         string      //time.Date
+type T_ResTrd struct{
+	Update         string        // date
+	Acc            int
+	CurCodBnk      T_CodeBank
+}
+
+
+type T_CodeBank struct{  	             // fix it. We don't need too many code
+	Code1	T_CodeInfo
+	Code2	T_CodeInfo
+	Code3	T_CodeInfo
 }
 
 type T_CodeInfo struct{
-	Code            string
-	OrgValue        int
-	CurValue        int
+	Code      string
+	Share     int
+	Amount    int
+	Inprc     float64          // buy in price
+}
+
+
+
+// last trade operation
+type T_LastOp struct{
+        Date            string
+	Acc             int
+	Op_evt_type     string
+        Buy_codbnk      T_CodeBank
+        Sale_codbnk     T_CodeBank
 }
 
 //-------------------------- A stock params --------------------------------------------------
@@ -147,17 +168,16 @@ type T_Mipos struct{
 	Eqpo       float64       // 0: equilibrium position
 	Bi         float64
 	Ti         float64
-	Cw_pos     float64
+	Pos     float64
+	Poslc	 []float64
 	Gnd        float64
 	Vcc        float64
 }
 
 
-// ------- run data ------------
-type T_Rundata struct{
-	LastBotDate  string
-	LastTopDate  string
-}
+const(
+	LEN_MIPOS_K  =   10
+)
 
 
 
@@ -222,9 +242,10 @@ const(  RUN_DIR = "/home/nk/calca/src/" )
 
 
 const(
-	FN_RUN_DATA        = RUN_DIR + "data/run_data.json"
         FN_RES_CALC        = RUN_DIR + "data/res_calc.json"
-        FN_RES_RRUN        = RUN_DIR + "data/res_rrun.json"
+        FN_RES_TRD         = RUN_DIR + "data/trdsim/res_trd.json"
+	FN_TRD_LAST_OP     = RUN_DIR + "data/trdsim/last_op.json"
+	FN_OP_REC          = RUN_DIR + "data/trdsim/op_rec.json"
 )
 
 const(
