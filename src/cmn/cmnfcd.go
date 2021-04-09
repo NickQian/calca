@@ -266,7 +266,7 @@ func JsonExtr_ResTrd(resTrdIf map[string]interface{})(resTrd T_ResTrd){
 	for k, v := range resTrdIf{				       // assert 1: the whole map
         	switch k{
 		case "acc":
-			resTrd.Acc = int(v.(int))
+			resTrd.Acc = int( v.(float64) )
 		case "update":
 			resTrd.Update  = v.(string)
                 case "curCode":
@@ -282,17 +282,18 @@ func JsonExtr_ResTrd(resTrdIf map[string]interface{})(resTrd T_ResTrd){
 
 
 func CodeBankExtra(Ifcb map[string]interface{})(cbnk  T_CodeBank){
-	for key_ccode, ccode := range Ifcb{              // iterate in "Current Code"(3 or maore)
+	for key_ccode, ccode := range Ifcb{                       // iterate in "Current Code"(3 or maore)
+		fmt.Printf("Info: <CodeBankExtra> Ifcb type: %v, key_ccode: %v  \n",  reflect.TypeOf(Ifcb).String(), key_ccode )
         	v_code_if, _ := ccode.(map[string]interface{})    // assert 3:  []interface{}
                 switch key_ccode{
-                case "curCode1":
+                case "code1":
                 	cbnk.Code1 = CodeInfoExtra(v_code_if)
-                case "curCode2":
+                case "code2":
                         cbnk.Code2 = CodeInfoExtra(v_code_if)
-                case "curCode3":
+                case "code3":
                         cbnk.Code3 = CodeInfoExtra(v_code_if)
                 default:
-                        panic ("Error: <JsonExtr_ResTrd> goes in default branch.")
+                        panic ("Error: <CodeBankExtra> goes in default branch.")
         	} //case
      	} //for
 	return
@@ -305,11 +306,11 @@ func CodeInfoExtra(IfCode map[string]interface{})(cinfo T_CodeInfo){
 		case "code":
 			cinfo.Code   = ci.(string)
 		case "share":
-			cinfo.Share  = ci.(int)
+			cinfo.Share  = int(ci.(float64) )
 		case "inprc":
 	 		cinfo.Inprc  = ci.(float64)
 		case "amount":
-	 		cinfo.Amount = ci.(int)
+	 		cinfo.Amount = int(ci.(float64) )
 		default:
 			panic ("Error: <CodeInfoExtra> goes in default branch.")
 		}
@@ -327,7 +328,7 @@ func JsonExtr_LastOp(runIf map[string]interface{})(lastOpDat T_LastOp){
                 case "date":
                         lastOpDat.Date        = v.(string)
 		case "acc":
-			lastOpDat.Acc         = v.(int)
+			lastOpDat.Acc         = int(v.(float64) )
         	case "op_evt_type":
 			lastOpDat.Op_evt_type = v.(string)
 		case "buy":

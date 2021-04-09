@@ -1,0 +1,9 @@
+{
+      "update" :"2021-04-02",
+      "acc"    : 1541370,
+      "curCode":{"code1":{"code":"601377", "share":69400, "inprc": 4.75, "amount": 601698 },
+      		 "code2":{"code":"600109", "share":43800, "inprc": 7.52, "amount": 561078 },
+      		 "code3":{"code":"600837", "share":34200, "inprc": 9.95, "amount": 378594 }
+	        }
+}
+

@@ -1,15 +1,15 @@
 {
     "2011-10-11":  {
-  		   "Acc": 414364,
+  		   "Acc":  414364,
 	           "op_evt_type": "Nothing",
 	           "buy":["Nothing","Nothing","Nothing"],
   		   "sale" :{
                             "code2": {"code": "600000", "share": 33900, "inprc" : 3.32, "amount": 112548  },
                             "code2": {"code": "000001", "share": 30800, "inprc" : 4.58, "amount": 141064  },
-                            "code2": {"code": "600030", "share": 19700, "inprc" : 8.16, "amount": 160752  },
+                            "code2": {"code": "600030", "share": 19700, "inprc" : 8.16, "amount": 160752  }
     },
     "2019-01-31":{
-  	           "Acc": 1000000,
+  	           "Acc":   1000000,
   		   "op_evt_type": "BotRlx",
   		   "buy" :{
 			    "code1": {"code": "601377", "share": 69400, "inprc" : 4.75, "amount": 329650  },
@@ -19,7 +19,7 @@
   		   "sale":{
 			    "code2": {"code": "600000", "share": 33900, "inprc" : 9.72, "amount": 329508  },
 			    "code2": {"code": "000001", "share": 30800, "inprc" :10.70, "amount": 329560  },
-			    "code2": {"code": "600030", "share": 19700, "inprc" :17.30, "amount": 329376  },
+			    "code2": {"code": "600030", "share": 19700, "inprc" :17.30, "amount": 329376  }
                           }
     }
 }
