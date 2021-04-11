@@ -20,39 +20,72 @@ import(
 	. "define"
 	"time"
         //"simtrade"
+	"cmn"
+	//"github.com/robfig/cron"
 )
 
 
 const (
-	contrb_site = "contribute:  www.github.com"
+	contrb_site = "github.com/NickQian/calca"
 	footer1 = "about"
 	footer2 = "donate"
 )
 
 
-var calRes  = T_CalRes{ Title : "  *** Calca For Free *** ",
-			Bi  : 0.0,
-			Ti : 0.5,
+var calRes  = T_CalRes{ Slogan : "  * Calca For Freedom * ",
+			Bi  : 50,
+			Ti  : 0,
 	     	       }
 
 
+//------------------- cron read calca --------------------------
+/*func Cron_ReadCalRes()(){
+	calRes.CalDate = cmn.TodayStr
 
+	c := cron.New( )
+	spec := "00 30 22 * * 1-5"        // sec minute h day_of_month month day_of_week
+	c.AddFunc(spec, ReadCalRes()error  )
+	fmt.Println("-->>>>> [Cron_ReadCalRes] added. ")
+	c.Start()
+}
+*/
+
+func ReadCalRes() (err error) {
+	// read mipos res
+
+	// read scan res
+
+	// read trade res
+	calRes.TrdRes, err = cmn.ReadResTrd(FN_RES_TRD)
+
+	return
+}
+
+
+//-------------------------------- main ------------------------------------------
 // use "DefaultServeMux"
 func main(){
 	//--- static ---
-	http.Handle("/about/", http.FileServer(http.Dir("static")) )
+	http.Handle("/css/",     http.FileServer(http.Dir("static")) )     // note the folder hierachy
+	http.Handle("/images/",  http.FileServer(http.Dir("static")) )
 
 	//--- dynamic ---
 	http.HandleFunc("/index/",  indexHandler    )
-	http.HandleFunc("/",        notFoundHandler )
+	http.HandleFunc("/",        NotFoundHandler )
+	http.HandleFunc("/about/",  aboutHandler )
 
 
 	//--- srv create & listen ---
 	log.Println("Webca is Listening..." )
-	err := http.ListenAndServe(":9090", nil)  //"nil" means use DefaultServeMux ("127.0.0.0:8000", nil)
+	err := http.ListenAndServe(":80", nil)  //"nil" means use DefaultServeMux ("127.0.0.0:8000", nil)
 	if err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
+
+	//--- calca cron ---
+	//calca_cron()
+	//select {}
+
 }
 
 
@@ -60,26 +93,40 @@ func main(){
 
 //-------------------- home ------------------------
 
-// home page
 func indexHandler(w http.ResponseWriter, r *http.Request)(){
 	fmt.Printf("-------> Info: in <indexHandler>, request.Header: %v   \n", r.Header)
 	fmt.Println("URL:", r.URL)
 	fmt.Println(" ### Will ParseFiles header.html... ")
 
 	// parser files
-	t, err := template.ParseFiles("template/header.html", "template/index.html", "template/footer.html",)
+	t, err := template.ParseFiles("template/header.html", "template/index.html", "template/footer.html" )
 	checkError(err)
 
 	// replace var
+	ReadCalRes()                // update "calres" through read res files
 	err = t.Execute(w, calRes)
 	checkError(err)
 }
 
 
 
+//------------------- about -------------------
+func aboutHandler(w http.ResponseWriter, r *http.Request)(){
+        fmt.Printf("-------> Info: in <aboutHandler>,  r.URL: %v  \n" , r.URL)
+
+        // parser files
+        t, err := template.ParseFiles("template/about.html", "template/footer.html" )
+        checkError(err)
+
+        // replace var
+        err = t.Execute(w, calRes)
+        checkError(err)
+}
+
+
 //-------------------- 404 --------------------------
 
-func notFoundHandler(w http.ResponseWriter, r *http.Request)(){
+func NotFoundHandler(w http.ResponseWriter, r *http.Request)(){
 	if r.URL.Path == "/"{
 		log.Printf("Info: <notFoundHandler> URL.path ==/ . status: %v, Will redirect...  \n", http.StatusFound )
 		http.Redirect( w, r, "/index", http.StatusFound)
@@ -101,12 +148,7 @@ func notFoundHandler(w http.ResponseWriter, r *http.Request)(){
 
 
 
-
-
-
-
-
-// 
+//-------------------- https --------------------------------------------
 func SrvCreate () (){
 	srv := &http.Server{
 		ReadTimeout :     5 * time.Second,
@@ -120,6 +162,7 @@ func SrvCreate () (){
 
 
 
+//------------------------------------------------------------
 func checkError(err error){
     if err != nil{
         fmt.Println("Fatal error", err.Error() )
@@ -132,31 +175,4 @@ func checkError(err error){
 
 
 
-
-
-/*
-func main(){
-
-        //--- mux ---
-        mux := http.NewServeMux()
-
-        //- static -
-        hdl_css := http.Handle("/css/", http.FileServer(http.Dir("static")))
-        hdl_js  := http.Handle("/js/",  http.FileServer(http.Dir("static")))
-
-        //- dynamic-
-        //hdl_home := http.HandleFunc("/index/", indexHandler)  
-        hdl_home := http.HandleFunc("/index/", indexHandler)    
-        hdl_info := http.HandleFunc("/about/", aboutHandler)
-        hdl_404  := http.HandleFunc("/",       notFoundHandler)
-        mux.Handle("/", hdl_home)
-        mux.Handle("/about/", aboutHandler)
-
-        //--- srv create & listen ---
-        log.Println("Listening..."
-        err := http.ListenAndServe(":9090", mux)  //("127.0.0.0:8000", nil)
-        if err != nil {
-                log.Fatal("ListenAndServe:", err)
-        }
-}*/
 

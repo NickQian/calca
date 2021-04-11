@@ -1,42 +1,45 @@
 <body>
 
-<div id="header" style="background-color:#7E735F;color:white;"> <!-- "background-color:#0xE0EbF5;color:0x375EAB;"  --> 
-<h4>Contribute:&nbsp <a href="https://github.com/NickQian/calca"> github链接 </a> </h4>
+<div id="header" style="background-color:#E0EBF5;color:#375EAB; text-align:center; padding:6px ">  
+  {{.Slogan}}   
 </div>
 
- &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp 
-<span>数据更新： {{.CalDate}} </span>
-	
-<p>-------------------------------------------------------</p>
+<br>
+<div id="update_date" style="text-align:center;"> Update: {{.TrdRes.Update}} </div>
+
+
 <table border="1">
     <tr>
         <td>bi: {{.Bi}}  &nbsp &nbsp </td>   
-		<td>ti: {{.Ti}}  &nbsp &nbsp  </td>   
-		<td>Mix_Casino_Weigher:  {{.CW_Casino}} - {{.CW_Weigher}} </td>   
+	<td>ti: {{.Ti}}  &nbsp &nbsp  </td>   
+	<td>Mix_Casino_Weigher:  {{.CW_Casino}} - {{.CW_Weigher}} </td>   
     </tr>
 </table>
 
-<p> <img src="//localhost:9090/images/res_mipos.png"  alt="Mipos Result" widht="320" height="320" >  </p>
+<p> <img src="http://1.116.12.197/images/res_mipos.png"  alt="Mipos Result" widht="360" height="360" >  </p>
 
-<p>-------------------------------------------------------</p>
-	
+<hr>  <!-- ------------------------------------------------------------------------ -->	
+<br>
 <table border="1">
     <tr>
-        <td>Scan Res: {{.Scan_res}} </td>   
+        <td> &nbsp  Scan Res: {{.ScanRes}}          &nbsp&nbsp </td>
+	<td> &nbsp  AutoTradeAccu: {{.TrdRes.Acc }} &nbsp&nbsp </td>
+	<td> &nbsp  Current Code: {{.TrdRes.CurCodBnk.Code1.Code}} - In Price: {{.TrdRes.CurCodBnk.Code1.Inprc }}  &nbsp | 
+			          {{.TrdRes.CurCodBnk.Code2.Code}} - In Price: {{.TrdRes.CurCodBnk.Code2.Inprc }}  &nbsp |
+			          {{.TrdRes.CurCodBnk.Code3.Code}} - In Price: {{.TrdRes.CurCodBnk.Code3.Inprc }}  &nbsp&nbsp </td> 
+	<td> &nbsp&nbsp&nbsp  since 2019.1.30  &nbsp&nbsp&nbsp    </td> 
     </tr>
 </table>
 
-<p>-------------------------------------------------------</p>
-	
-<p>AutoTradeAccu: {{.SimRes.CurValue }}   &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp |&nbsp &nbsp &nbsp &nbsp since2019.1.30 </p>
-&nbsp &nbsp &nbsp  <br> <hr> <br>
-	
-<a href="http://118.24.165.139:9090/about">About</a> 
-&nbsp &nbsp 
-<a href="http://118.24.165.139:9090/feedback">反馈</a>
+<br>
 
-<div id="footer" style="background-color:#7E735F;color:white; clear:both;text-align:center; padding: 10px">
-版权 © calca </div>
+<hr>  <!----------------------------------------------------------------------- -->	
+
+<a href="http://1.116.12.197/about">About</a> 
+&nbsp &nbsp 
+<a href="https://github.com/NickQian/calca">Github</a>
+
+<br> <br>
 
 </body>
 

@@ -1,0 +1,46 @@
+<body>
+<div id="header" style="background-color:#E0EBF5;color:#375EAB; text-align:center;">  
+<h4>  * Calca For Freedom * </a> </h4>
+</div>
+
+<div id="update_date" style="text-align:center;"> Update: {{.CalDate}} </div>
+
+
+<table border="1">
+    <tr>
+        <td>bi: {{.Bi}}  &nbsp &nbsp </td>   
+	<td>ti: {{.Ti}}  &nbsp &nbsp  </td>   
+	<td>Mix_Casino_Weigher:  {{.CW_Casino}} - {{.CW_Weigher}} </td>   
+    </tr>
+    <tr>
+        <td>bi: {{.Bi}}  &nbsp &nbsp </td>
+        <td>ti: {{.Ti}}  &nbsp &nbsp  </td>
+        <td>Mix_Casino_Weigher:  {{.CW_Casino}} - {{.CW_Weigher}} </td>
+    </tr>
+</table>
+
+<p> <img src="http://1.116.12.197/images/res_mipos.png"  alt="Mipos Result" widht="450" height="450" >  </p>
+
+<hr>  <!-- ------------------------------------------------------------------------ -->	
+<br>
+<table border="1">
+    <tr>
+        <td>Scan Res: {{.Scan_res}} </td>   
+    </tr>
+</table>
+
+<p>AutoTradeAccu: {{.SimRes.CurValue }}   &nbsp &nbsp &nbsp &nbsp &nbsp | &nbsp &nbsp since 2019.1.30 </p>
+
+
+<hr>  <!----------------------------------------------------------------------- -->	
+
+<br>
+<a href="http://1.116.12.197/about">About</a> 
+&nbsp &nbsp 
+<a href="https://github.com/NickQian/calca">Github</a>
+
+
+</body>
+
+{{template "footer.html" . }}
+
