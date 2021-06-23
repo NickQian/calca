@@ -23,6 +23,19 @@ func TestOperateTime(t *testing.T){
 
 
 
+func TestPullHisKline(t *testing.T){
+	//_, sh_K := PullHisKline("000001.SH", enddate, dfn.FN_KLINE_SH)
+	_, K := PullHisKs("20210612")
+	t.Logf("sh_K: %v ", K)
+}
+
+
+func TestPullTodayKpos(t *testing.T){
+	PullTodayKpos
+
+}
+
+
 func TestReadCalRes(t *testing.T){
 	calRes, err := ReadCalRes(dfn.FN_RES_CALC)
 	if err != nil{

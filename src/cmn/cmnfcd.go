@@ -11,9 +11,11 @@ package cmn
 import (
         "fmt"
         "io/ioutil"
-        "time"
+        "io"
+	"time"
         "qif"
         //"strconv"
+	"encoding/binary"
         "encoding/json"
         "os"
 	"reflect"
@@ -23,6 +25,8 @@ import (
         "strings"
         "bytes"
 	"sort"
+	"math"
+	"strconv"
         )
 
 
@@ -32,7 +36,8 @@ var Log *log.Logger
 var T_Now time.Time
 var timeLocation *time.Location
 
-var TodayStr string
+var TodayStr     string
+var YesterdayStr string
 
 var A = new(T_A)               // Inst A parameters
 
@@ -87,13 +92,15 @@ func init(){
 
 
 func initToday(){
-        T_Now = time.Now()
+        T_Now       = time.Now()
         TodaySlice := strings.SplitAfter(T_Now.Format(TIME_LAYOUT_STR), " ")
-        TodayStr = strings.TrimSpace(TodaySlice[0])
+        TodayStr    = strings.TrimSpace(TodaySlice[0])
 
+        T_Yesterday      := LastDay(T_Now)
+	YesterdaySlice   := strings.SplitAfter(T_Yesterday.Format(TIME_LAYOUT_STR), " ")
+	YesterdayStr      = strings.TrimSpace(YesterdaySlice[0])
 
-        Print("<cmn-init>: TodayStr:", TodayStr )
-        Print("<cmn-init> done!", TodaySlice)
+        fmt.Printf("<cmn-init>: TodayStr: %s. YesterdayStr: %s  \n ", TodayStr, YesterdayStr )
 }
 
 
@@ -351,6 +358,63 @@ func JsonExtr_LastOp(runIf map[string]interface{})(lastOpDat T_LastOp){
 // Bool<-json Bool;           float64<-Json number;             string<-json string;
 // []interface{}<-Json array; map[string]interface <- json obj; nil<- Json nul
 //--------------------------------------------------------------------------------------
+
+//-------- basic write ---------
+
+// ioutil new write
+func Wr_Byte(Byte []byte, fn string) (err error){
+                //WriteFile(filename string, data[]byte, perm os.FileMode) error
+     	if ioutil.WriteFile(fn,             Byte,        os.ModeAppend|0644) != nil {         // 0644
+        	fmt.Printf("ERROR: 写文件出错. fn: %s \n", fn)
+       		return errors.New("写文件出错.")
+        }else{
+                fmt.Printf("Success.写文件成功. fn: %s \n", fn)
+        }
+        return
+}
+
+
+// append write
+func Wr_Byte_(Byte []byte, fn string)(err error){
+	f, err := os.OpenFile(fn, os.O_APPEND|os.O_WRONLY, 0644) //os.O_CREATE
+	if err != nil{
+    		return errors.New("ERROR: Open 文件出错")
+    		log.Fatalf("Open 文件出错: %s", err)
+    	}else{
+    		fmt.Printf("Open 文件成功, fn: %s \n",  fn)
+    	}
+
+        defer f.Close()
+
+        if _, err := f.Write(Byte); err != nil{
+        //if _, err := f.WriteString(string(jsonByte)); err != nil{
+        	log.Fatalf("写文件出错:%s ", err)
+		return errors.New("写文件出错.")
+        }
+        return
+}
+
+// Append write. Input is string
+func Wr_String_(strWr string, fn string)(err error){
+	//strWr := string(Byte)
+	f, err := os.OpenFile(fn, os.O_APPEND|os.O_WRONLY, 0644)        // , 0666)
+	defer f.Close()
+	if err != nil{
+		fmt.Printf("Error: Open file err: %v \n", err)
+		return
+	}
+
+
+	if _, err = io.WriteString(f, strWr); err != nil{
+		fmt.Printf("Error: Write String to file fail!  %v  \n", err)
+		return
+	}
+	fmt.Printf("Info: Write String success. file: %v \n", fn)
+	return
+}
+
+//----------- Event write --------
+
 func WriteEvtdata(fn_rec_data, fn_avg_data string, i_evt int, A_evt []T_A, eggMap map[string](map[string]float64) )(  ){
 //func WriteEvtdata(i_evt int, A_evt []T_A, eggMap map[string]interface{} )(  ){
 	fmt.Printf("===> <WriteEvtdata>:  A_evt: %v   \n",  A_evt )
@@ -368,9 +432,9 @@ func WriteEvtdata(fn_rec_data, fn_avg_data string, i_evt int, A_evt []T_A, eggMa
 func WriteEvtWins(evtWin []T_A, fn string, add bool)(err error){
         jsonBytes, err := AtoJson(evtWin)
         if add{
-                err = Wr_Json_(jsonBytes, fn)
+                err = Wr_Byte_(jsonBytes, fn)
         }else{
-        	err = Wr_Json(jsonBytes, fn)
+        	err = Wr_Byte(jsonBytes, fn)
         }
         return
 }
@@ -385,7 +449,7 @@ func WriteScanRes(sug1, sug2, sug3 string, fn string) (err error) {
                 Print("ERROR: <WriteScanRes> map to Json 出错:", err)
         }
 
-	err = Wr_Json(jsonBytes, fn)
+	err = Wr_Byte(jsonBytes, fn)
 	return
 }
 
@@ -395,79 +459,12 @@ func WriteScanRes(sug1, sug2, sug3 string, fn string) (err error) {
 func WriteEvtAvg(evtAvg map[string](map[string]float64), fn string, add bool)(err error){
 	jsonBytes, err := mapToJson(evtAvg)
 	if add{
-		err = Wr_Json_(jsonBytes, fn)
+		err = Wr_Byte_(jsonBytes, fn)
 	}else{
-		err = Wr_Json(jsonBytes, fn)
+		err = Wr_Byte(jsonBytes, fn)
 	}
 	return
 }
-
-
-
-//------------- Json <-> A struct ----------
-// As is "A" struct slice
-func AtoJson(As []T_A)(jsonBytes []byte, err error){
-        //jsbyte := []byte
-        for _, v := range As{
-        	if jsbyte, err := json.MarshalIndent(v, "", "\t"); err == nil{        //json.MarshalIndent(struct, "", "    ")
-        		fmt.Println("struct转json成功" )
-        		for _, e := range jsbyte{
-            			jsonBytes = append(jsonBytes,e)
-            		}
-        	}else{
-                	Print("ERROR: Struct to Json 出错.")
-        	}
-        }
-        return
-}
-
-
-//func mapToJson(m map[string]interface{} )(jsonBytes []byte, err error){
-func mapToJson(m map[string](map[string]float64) )(jsonBytes []byte, err error){
-	if jsonBytes, err = json.MarshalIndent(m, "", "\t"); err == nil{        //func MarshalIndent(v interface{}, prefix, indent string)([]byte, error)
-	        fmt.Println("map转json成功")
-	}else{
-	        Print("ERROR: map to Json 出错:", err)
-	}
-	return
-}
-
-
-
-//-------- basic write ---------
-// ioutil new write
-func Wr_Json(jsonByte []byte, fn string) (err error){
-        //        WriteFile(filename string, data[]byte, perm os.FileMode) error
-     	if ioutil.WriteFile(fn, jsonByte, os.ModeAppend|0644) != nil {         // 0644
-        	Print("ERROR: 写文件出错.")
-       		return errors.New("写文件出错.")
-        }else{
-                Print("Success.写文件成功:", fn)
-        }
-        return
-}
-
-
-// append write
-func Wr_Json_(jsonByte []byte, fn string)(err error){
-	f, err := os.OpenFile(fn, os.O_APPEND|os.O_WRONLY, 0644) //os.O_CREATE
-	if err != nil{
-    		return errors.New("ERROR: Open 文件出错")
-    		log.Fatalf("Open 文件出错: %s", err)
-    	}else{
-    		Print("Open 文件成功, f,fn:", f, fn)
-    	}
-
-        defer f.Close()
-
-        if _, err := f.Write(jsonByte); err != nil{
-        //if _, err := f.WriteString(string(jsonByte)); err != nil{
-        	log.Fatalf("写文件出错:%s", err)
-		return errors.New("写文件出错.")
-        }
-        return
-}
-
 
 
 
@@ -837,6 +834,91 @@ func GetBtWindow_raw(date string, prenum int)(bw []string){
 }
 
 
+
+//------------- Json <-> A struct ----------
+// As is "A" struct slice
+func AtoJson(As []T_A)(jsonBytes []byte, err error){
+        //jsbyte := []byte
+        for _, v := range As{
+        	if jsbyte, err := json.MarshalIndent(v, "", "\t"); err == nil{        //json.MarshalIndent(struct, "", "    ")
+        		fmt.Println("struct转json成功" )
+        		for _, e := range jsbyte{
+            			jsonBytes = append(jsonBytes,e)
+            		}
+        	}else{
+                	Print("ERROR: Struct to Json 出错.")
+        	}
+        }
+        return
+}
+
+
+//func mapToJson(m map[string]interface{} )(jsonBytes []byte, err error){
+func mapToJson(m map[string](map[string]float64) )(jsonBytes []byte, err error){
+	if jsonBytes, err = json.MarshalIndent(m, "", "\t"); err == nil{        //func MarshalIndent(v interface{}, prefix, indent string)([]byte, error)
+	        fmt.Println("map转json成功")
+	}else{
+	        Print("ERROR: map to Json 出错:", err)
+	}
+	return
+}
+
+
+/***************************************************************************
+/*   Get K line (pull from qif. store in file. read from file)
+/*
+/***************************************************************************/
+
+// read from the kline file to get kline
+func FetchKline()(){
+
+	return
+}
+
+
+// get today kline and append to the k line file
+func PullTodayKpos()(){
+
+	yestPos_sh := qif.GetKline("000001.SH",  YesterdayStr,  YesterdayStr)
+	if len(yestPos_sh) == 1{
+		Wr_Byte_(SlcFlt2Bytes(yestPos_sh), FN_KLINE_SH )
+	}
+	return
+}
+
+
+func PullHisKs(enddate string)(suc bool, K []float64){
+	suc, K = PullHisKline("000001.SH", enddate, FN_KLINE_SH    )
+        suc, K = PullHisKline("399001.SZ", enddate, FN_KLINE_SZ    )
+        suc, K = PullHisKline("000300.SH", enddate, FN_KLINE_SH300 )
+        suc, K = PullHisKline("399006.SZ", enddate, FN_KLINE_GEM   )
+        //FN_KLINE_STAR
+
+	return
+}
+
+
+// read one kind of history kline from qif and store into txt
+func PullHisKline(code string, enddate string, fn string)(suc bool, sh_K []float64){
+	suc = false
+
+	sh_K = qif.GetKline(code, "20140311", enddate)     // start: "19910101"
+	sh_K_rvs := ReverseSlc(sh_K)
+	Wr_String_(slcFlt2String(sh_K_rvs), fn)
+
+	suc = true
+	return
+}
+
+
+
+/**********************************************************************
+/*		Other utily
+/*
+/*********************************************************************/
+
+
+
 // eg. input: 20150520, output: 2010-05-20
 func DateStrAddSlash (dateStrShort string)(dateStr string){
 	dateByte := []byte(dateStrShort)
@@ -850,6 +932,7 @@ func DateStrAddSlash (dateStrShort string)(dateStr string){
 	return
 }
 
+// get the time.time of last day
 func LastDay(day time.Time)(lastday time.Time){
         lastday = day.AddDate(0, 0, -1)
         return
@@ -882,5 +965,30 @@ func ReverseSlc(s []float64)([]float64){
 func Delay_Qif_Intvl()(){
 
         time.Sleep(QIF_ACCESS_INTVL * time.Millisecond)
+	return
+}
+
+
+func Float64ToByte(float float64)([]byte){
+	bits  := math.Float64bits(float)
+	bytes := make([]byte, 8)
+	binary.LittleEndian.PutUint64(bytes, bits)
+	return bytes
+}
+
+
+func SlcFlt2Bytes(din []float64)( obyte []byte){
+	for _, v := range din{
+		obyte = append(obyte, Float64ToByte(v)...)
+	}
+	//fmt.Printf("<SlcFlt2Byte> total num: %v \n", i)
+	return
+}
+
+
+func slcFlt2String(din []float64)(str string){
+	for _, v := range din{
+		str += strconv.FormatFloat(v, 'f', -1, 64) + "\n"          // 'E'
+	}
 	return
 }

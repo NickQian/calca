@@ -44,11 +44,11 @@ def getKline(index, startDay, endDay):
 """ts_code trade_date total_mv(总市值) float_mv(流通市值）total_share float_share free_share turnover_rate turnover_rate_f pe  pe_ttm  pb
 0   000001.SH * 20190104  3.219598e+13  2.338122e+13  4.500358e+12  ...           0.51             1.32  12.04   11.08  1.25
 1   000005.SH   20190104  1.481860e+12  7.004018e+11  1.738149e+11  ...           1.75             2.52  14.52   13.70  1.34
-2   000006.SH   地产指数[000006]实时行情_东方财富
-3   000016.SH   (sh50)
+2   000006.SH   地产指数[000006]
+3   000016.SH   (sh50)  :
 4   000300.SH @ (hs300) :   valid from 2005
 5   000905.SH   (中证500)
-6   399001.SZ * (sz 001)
+6   399001.SZ * (sz 001):   valid from 2004.1
 7   399005.SZ * (中小板指)
 8   399006.SZ * (创业板指): valid from 2010
 9   399016.SZ   (深证创新)

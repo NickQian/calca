@@ -3,7 +3,7 @@
 /* ----
 /*  License: BSD
 /* ----
-/*  0.01 define structs & types - 2019.1.15 - Nick cKing
+/*  0.1 define structs & types - 2019.1.15 - Nick cKing
 /********************************************************************************************/
 
 package define
@@ -88,10 +88,10 @@ type T_pe struct{
         Pe_sh      float64 `jason:"Pe_sh"`
         Pe_sz      float64 `jason:"Pe_sz"`
         Pe_hs300   float64 `jason:"Pe_hs300"`         // 沪深300
-        Pe_szm     float64 `jason:"Pe_szm"`
-        Pe_smb     float64 `jason:"Pe_smb"`
-        Pe_gem     float64 `jason:"Pe_gem"`
-        //Pe_tim     float64 `jason:"Pe_tim"`           // 科创板
+        Pe_szm     float64 `jason:"Pe_szm"`           // 深圳主板
+        Pe_smb     float64 `jason:"Pe_smb"`           // 
+        Pe_gem     float64 `jason:"Pe_gem"`           // 创业板
+        //Pe_tim     float64 `jason:"Pe_tim"`         // 科创板
 }
 
 
@@ -259,4 +259,12 @@ const(
         FN_EGG_BOT_PUC     = RUN_DIR + "data/proc/botpunch_cha.json"
         FN_EGG_TOP_CRZ     = RUN_DIR + "data/proc/topcrz_cha.json"
         FN_EGG_TOP_HOT     = RUN_DIR + "data/proc/tophot_cha.json"
+)
+
+const(
+	FN_KLINE_SH    = RUN_DIR + "data/kline/sh_K.txt"
+	FN_KLINE_SZ    = RUN_DIR + "data/kline/sz_K.txt"
+	FN_KLINE_SH300 = RUN_DIR + "data/kline/hs300_K.txt"
+	FN_KLINE_GEM   = RUN_DIR + "data/kline/gem_K.txt"
+        FN_KLINE_STAR  = RUN_DIR + "data/kline/star_K.txt"
 )
