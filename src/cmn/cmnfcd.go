@@ -869,42 +869,62 @@ func mapToJson(m map[string](map[string]float64) )(jsonBytes []byte, err error){
 /*
 /***************************************************************************/
 
-// read from the kline file to get kline
+//---------------------- read kline from the file ---------------------------------
+
 func FetchKline()(){
 
 	return
 }
 
 
-// get today kline and append to the k line file
-func PullTodayKpos()(){
 
-	yestPos_sh := qif.GetKline("000001.SH",  YesterdayStr,  YesterdayStr)
-	if len(yestPos_sh) == 1{
-		Wr_Byte_(SlcFlt2Bytes(yestPos_sh), FN_KLINE_SH )
-	}
-	return
+//--- Refresh today's Kline -----
+func PullTodayKs()(suc bool){
+	suc = false
+	PullTodayPos("000001.SH", FN_KLINE_SH)
+	PullTodayPos("399001.SZ", FN_KLINE_SZ)
+	PullTodayPos("000300.SH", FN_KLINE_SH300)
+	PullTodayPos("399006.SZ", FN_KLINE_GEM)
+	return true
 }
 
 
-func PullHisKs(enddate string)(suc bool, K []float64){
-	suc, K = PullHisKline("000001.SH", enddate, FN_KLINE_SH    )
-        suc, K = PullHisKline("399001.SZ", enddate, FN_KLINE_SZ    )
-        suc, K = PullHisKline("000300.SH", enddate, FN_KLINE_SH300 )
-        suc, K = PullHisKline("399006.SZ", enddate, FN_KLINE_GEM   )
+//--- History kline store -----
+//pull codes & store into txt
+func PullHisKindex(enddate string)(suc bool, K []float64){
+	suc, K = PullHisKline("000001.SH", DATE_SH_START,      enddate, FN_KLINE_SH    )
+        suc, K = PullHisKline("399001.SZ", DATE_SZ_START,      enddate, FN_KLINE_SZ    )
+        suc, K = PullHisKline("000300.SH", DATE_HS300_START,   enddate, FN_KLINE_SH300 )
+        suc, K = PullHisKline("399006.SZ", DATE_MKT_GEM_START, enddate, FN_KLINE_GEM   )
         //FN_KLINE_STAR
 
 	return
 }
 
+//---------------------------------- sub func -------------------------------------------------
+// 1) get one code's today kline
+// 2) append to the k line file
+func PullTodayPos(code, fn string)( []float64){
 
-// read one kind of history kline from qif and store into txt
-func PullHisKline(code string, enddate string, fn string)(suc bool, sh_K []float64){
+	yestPos := qif.GetKline(code,  DateStrRmvSlash(YesterdayStr),  DateStrRmvSlash(YesterdayStr))
+	if len(yestPos) == 1{
+		fmt.Printf("Info: <PullTodayKpos>: get yestPos: %v. YesterdayStr:%v \n", yestPos, YesterdayStr)
+		Wr_String_(slcFloat2String(yestPos), fn )
+	}else{
+		fmt.Printf("Warning: <PullTodayKpos>: get yestPos: %v. YesterdayStr:%v \n", yestPos, YesterdayStr)
+	}
+	return yestPos
+}
+
+
+// 1)pull history kline(one kind, according code) from qif and 
+// 2)store into txt. can be used for single code directly.
+func PullHisKline(code string, startdate, enddate string, fn string)(suc bool, sh_K []float64){
 	suc = false
 
-	sh_K = qif.GetKline(code, "20140311", enddate)     // start: "19910101"
-	sh_K_rvs := ReverseSlc(sh_K)
-	Wr_String_(slcFlt2String(sh_K_rvs), fn)
+	sh_K = qif.GetKline(code, startdate, enddate)     // start: "19910101"
+	//sh_K_rvs := ReverseSlc(sh_K)                     // reverse the K line
+	Wr_String_(slcFloat2String(sh_K), fn)
 
 	suc = true
 	return
@@ -916,7 +936,18 @@ func PullHisKline(code string, enddate string, fn string)(suc bool, sh_K []float
 /*		Other utily
 /*
 /*********************************************************************/
-
+// eg. input: 2015-05-20, output: 20100520
+func DateStrRmvSlash (dateStr_ string)(dateStr string){
+        dateByte := []byte(dateStr_)
+        byteTmp  := [][]byte{ dateByte[0:4], dateByte[5:7], dateByte[8:10] }
+        for _, v := range byteTmp{
+                strTmp := string(v)
+                //fmt.Printf("##, v: %v, strTmp: %v   \n ", v, strTmp)
+                dateStr = dateStr + strTmp
+        }
+        //fmt.Print("## dateStr:", dateStr,)
+        return
+}
 
 
 // eg. input: 20150520, output: 2010-05-20
@@ -986,7 +1017,8 @@ func SlcFlt2Bytes(din []float64)( obyte []byte){
 }
 
 
-func slcFlt2String(din []float64)(str string){
+// convert []float to string
+func slcFloat2String(din []float64)(str string){
 	for _, v := range din{
 		str += strconv.FormatFloat(v, 'f', -1, 64) + "\n"          // 'E'
 	}

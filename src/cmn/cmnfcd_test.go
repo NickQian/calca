@@ -22,16 +22,33 @@ func TestOperateTime(t *testing.T){
 }
 
 
+// single code
+func TestPullTodayPos(t *testing.T){
+	yestPos := PullTodayPos("000001.SH", dfn.FN_KLINE_SH)
+	t.Logf("yestPos: %v ", yestPos)
+}
 
-func TestPullHisKline(t *testing.T){
+
+// many
+func TestPullTodayKs(t *testing.T){
+	suc := PullTodayKs()
+	t.Logf("<PullTodayKs> result: %v \n", suc)
+}
+
+// pull indexs codes history data
+func TestPullHisKindex(t *testing.T){
 	//_, sh_K := PullHisKline("000001.SH", enddate, dfn.FN_KLINE_SH)
-	_, K := PullHisKs("20210612")
+	_, K := PullHisKindex(YesterdayStr)
 	t.Logf("sh_K: %v ", K)
 }
 
 
-func TestPullTodayKpos(t *testing.T){
-	PullTodayKpos
+// pull single code history data
+func TestPullHisKline(t *testing.T){
+	PullHisKline("601995.SH", "20201103", YesterdayStr, dfn.FN_KLINE_SUG1A)        // zhongjin
+	PullHisKline("300059.SZ", "20140503", YesterdayStr, dfn.FN_KLINE_SUG1B)
+	PullHisKline("603986.SH", "20201103", YesterdayStr, dfn.FN_KLINE_SUG2A)        // zhaoyi
+	PullHisKline("002049.SZ", "20201103", YesterdayStr, dfn.FN_KLINE_SUG2B)        // ziguang_guowei
 
 }
 

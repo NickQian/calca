@@ -230,11 +230,17 @@ const(
 
 
 
-const(  DATE_HS300_START   = "2005-04-29"
-        DATE_MKT_SMB_START = "2006-02-10"
-	DATE_MKT_GEM_START = "2010-06-18"
-	DATE_2015_0520EVT  = "2015-05-20"
+const(  DATE_SH_START   = "19910201"
+        DATE_SZ_START   = "20040201"
+        DATE_HS300_START   = "20050510"     //"2005-04-29"
+	DATE_MKT_GEM_START = "20100618"     //"2010-06-18"
 	DATE_MKT_TIM_START = "2019-08-22"
+        DATE_MKT_SMB_START = "2006-02-10"
+)
+
+const ( 	DATE_2015_0520EVT  = "2015-05-20"
+	DATE_LAST_BOT   = "2019-01-04"
+
 )
 
 
@@ -267,4 +273,11 @@ const(
 	FN_KLINE_SH300 = RUN_DIR + "data/kline/hs300_K.txt"
 	FN_KLINE_GEM   = RUN_DIR + "data/kline/gem_K.txt"
         FN_KLINE_STAR  = RUN_DIR + "data/kline/star_K.txt"
+
+	FN_KLINE_SUG1A  = RUN_DIR + "data/kline/sug1A_K.txt"
+	FN_KLINE_SUG1B  = RUN_DIR + "data/kline/sug1B_K.txt"
+	FN_KLINE_SUG2A  = RUN_DIR + "data/kline/sug2B_K.txt"
+	FN_KLINE_SUG2B  = RUN_DIR + "data/kline/sug2A_K.txt"
+	FN_KLINE_SUG3A  = RUN_DIR + "data/kline/sug3A_K.txt"
+	FN_KLINE_SUG3B  = RUN_DIR + "data/kline/sug3B_K.txt"
 )
