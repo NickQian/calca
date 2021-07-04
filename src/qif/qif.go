@@ -68,8 +68,8 @@ var PyModule *python.PyObject
 
 
 //------------------------ func实现 ------------------------------------
-func GetKline(indexType, dayStart, dayEnd string)(kline []float64){
-	_, I_kline, _ := goCallpy("getKline", indexType, dayStart, dayEnd)
+func GetIxKline(indexType, dayStart, dayEnd string)(kline []float64){
+	_, I_kline, _ := goCallpy("getIxKline", indexType, dayStart, dayEnd)
 	//if klineStr, ok := I_kline.([]string); ok{
 	if len(I_kline) > 0{
 		for _, v := range I_kline{
@@ -83,14 +83,30 @@ func GetKline(indexType, dayStart, dayEnd string)(kline []float64){
 	return
 }
 
+
+// the diff compared to last func is the API of tushare
+func GetIsKline(stockcode, dayStart, dayEnd string)(kline []float64){
+        _, I_kline, _ := goCallpy("getIsKline", stockcode, dayStart, dayEnd)
+        if len(I_kline) > 0{
+                for _, v := range I_kline{
+                        if n, err := strconv.ParseFloat(v, 64); err == nil {
+                                kline = append(kline, n)
+                        }
+                }
+        }else{
+                fmt.Print(ErrNoDataReturn)
+        }
+        return
+}
+
 // use <GetMarket> to update "Today" info
 func GetCurMarket_raw() (resDic map[string]float64){
 	// find a recent valid trade day
-	validDays := GetTradeDays(Today)
+	validDays := GetTradeDays(Today, PRE_SMP_NUM)
 	if CurDay := validDays[len(validDays)-1]; CurDay==""{
 		panic("ERROR: <GetCurMarket_raw> CurDay is nil. ")
 	}else {
-	        resDic = GetMarket( CurDay )
+	        resDic = GetMarket_raw( CurDay )
                 if len(resDic) == 0{
 	        	fmt.Println("Error: <GetCurMarket_raw> result is empty. Maybe internet access problem or not trade day.")
         	}
@@ -100,7 +116,7 @@ func GetCurMarket_raw() (resDic map[string]float64){
 
 
 // Get One day market info, eg. PB, PE, Volr
-func GetMarket(day string)(dicmkt map[string]float64){
+func GetMarket_raw(day string)(dicmkt map[string]float64){
 	dicmkt = make(map[string]float64)
 	dicmkt, _, _ = goCallpy("getMarketMap", day)
         if len(dicmkt) == 0{
@@ -141,8 +157,8 @@ func FilDicToA(dicmkt map[string]float64, a *T_A, tag string)(bool){
 }
 
 
-func GetTradeDays(date string)(days []string){
-	_, I_days, _ := goCallpy("getTradeDays", date, strconv.Itoa(PRE_SMP_NUM) )    // string to facilitate <goCallpy>
+func GetTradeDays(date string, pre_num int)(days []string){
+	_, I_days, _ := goCallpy("getTradeDays", date, strconv.Itoa(pre_num) )    // string to facilitate <goCallpy>
 	//if days, ok := I_days.([]string); ok{
 	if len(I_days) > 0{
 		days = I_days
@@ -241,7 +257,7 @@ func goCallpy(defname string, args ...string)(omap map[string]float64, oslice []
 		sucObj := f.Call(argv, python.Py_None)                            // func (self *PyObject) Call(args, kw *PyObject) *PyObject
 		fmt.Println("--(2-1)--Qif_Login: sucObj is:", sucObj)
 		return nil, nil, sucObj.IsTrue()
-	case "getTradeDays", "getKline": // list will be returned
+	case "getTradeDays", "getIxKline", "getIsKline": // list will be returned
 		resListObj := f.Call(argv, python.Py_None)
                 //fmt.Printf("--(2-2): f:%v,defname:%v, argv:%v, resListObj:%v\n", f, defname, argv, resListObj)
 		if resListObj != nil{

@@ -892,37 +892,39 @@ func PullTodayKs()(suc bool){
 //--- History kline store -----
 //pull codes & store into txt
 func PullHisKindex(enddate string)(suc bool, K []float64){
-	suc, K = PullHisKline("000001.SH", DATE_SH_START,      enddate, FN_KLINE_SH    )
-        suc, K = PullHisKline("399001.SZ", DATE_SZ_START,      enddate, FN_KLINE_SZ    )
-        suc, K = PullHisKline("000300.SH", DATE_HS300_START,   enddate, FN_KLINE_SH300 )
-        suc, K = PullHisKline("399006.SZ", DATE_MKT_GEM_START, enddate, FN_KLINE_GEM   )
+	suc, K = PullHisIx("000001.SH", DATE_SH_START,      enddate, FN_KLINE_SH    )
+        suc, K = PullHisIx("399001.SZ", DATE_SZ_START,      enddate, FN_KLINE_SZ    )
+        suc, K = PullHisIx("000300.SH", DATE_HS300_START,   enddate, FN_KLINE_SH300 )
+        suc, K = PullHisIx("399006.SZ", DATE_MKT_GEM_START, enddate, FN_KLINE_GEM   )
         //FN_KLINE_STAR
 
 	return
 }
 
 //---------------------------------- sub func -------------------------------------------------
-// 1) get one code's today kline
-// 2) append to the k line file
+// 1) get one code's today position.
+// 2) can be single code or index
+// 3) append to the k line file
 func PullTodayPos(code, fn string)( []float64){
 
-	yestPos := qif.GetKline(code,  DateStrRmvSlash(YesterdayStr),  DateStrRmvSlash(YesterdayStr))
-	if len(yestPos) == 1{
-		fmt.Printf("Info: <PullTodayKpos>: get yestPos: %v. YesterdayStr:%v \n", yestPos, YesterdayStr)
-		Wr_String_(slcFloat2String(yestPos), fn )
+	todayPos := qif.GetIxKline(code,  DateStrRmvSlash(TodayStr),  DateStrRmvSlash(TodayStr))   //YesterdayStr
+	if len(todayPos) == 1{
+		fmt.Printf("Info: <PullTodayKpos>: get todayPos: %v. TodayStr:%v \n", todayPos, TodayStr)
+		Wr_String_(slcFloat2String(todayPos), fn )
 	}else{
-		fmt.Printf("Warning: <PullTodayKpos>: get yestPos: %v. YesterdayStr:%v \n", yestPos, YesterdayStr)
+		fmt.Printf("Warning: <PullTodayKpos>: get todayPos: %v. TodayStr:%v \n", todayPos, TodayStr)
 	}
-	return yestPos
+	return todayPos
 }
 
 
-// 1)pull history kline(one kind, according code) from qif and 
-// 2)store into txt. can be used for single code directly.
-func PullHisKline(code string, startdate, enddate string, fn string)(suc bool, sh_K []float64){
+// 1)pull history index kline(one kind, according code) from qif and
+// 2)store into txt.
+// date format: 20190104
+func PullHisIx(code string, startdate, enddate string, fn string)(suc bool, sh_K []float64){
 	suc = false
 
-	sh_K = qif.GetKline(code, startdate, enddate)     // start: "19910101"
+	sh_K = qif.GetIxKline(code, startdate, enddate)     // start: "19910101"
 	//sh_K_rvs := ReverseSlc(sh_K)                     // reverse the K line
 	Wr_String_(slcFloat2String(sh_K), fn)
 
@@ -930,6 +932,19 @@ func PullHisKline(code string, startdate, enddate string, fn string)(suc bool, s
 	return
 }
 
+
+// Pull individual stock code
+// date format: 20190104
+func PullHisIs(code string, startdate, enddate string, fn string)(suc bool, sh_K []float64){
+        suc = false
+
+        sh_K = qif.GetIsKline(code, startdate, enddate)     // start: "19910101"
+        //sh_K_rvs := ReverseSlc(sh_K)                     // reverse the K line
+        Wr_String_(slcFloat2String(sh_K), fn)
+
+        suc = true
+        return
+}
 
 
 /**********************************************************************

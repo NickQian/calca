@@ -4,6 +4,7 @@
 #  ----
 #  License: BSD
 #  ----
+#  0.2: 
 #  0.1: init version: TS数据历史：从2004年1月开始提供 - 2020.9 - Nick cKing
 """
 
@@ -22,10 +23,43 @@ def Login_TS(usr, password):
 	print("@:Python Info: tushare pro version:", ts.__version__)
 	return  True, True, True
 
+"""
+########################### TS API ########################################
+# Is(Individual staock):   daily()  ->
+#                         *daily_basic() -> details. ttm/pe/vol/tnr
+# Ix(Index):              *index_daily() -> k line. today detail.
+#                         *index_basix() -> pe/vol/tnr etc.             """
 
-# ------------- kline --------------
-# daily, eg: '000001.SH', '20181010'
-def getKlineNum(index, startDay, endDay):
+
+
+#--------- single stock kline ----------------
+# 1)individual stocks  kline.
+# 2) eg. '20181010'
+def getIsKlineNum(stockcode, startDay, endDay):
+        #(ts_code='', trade_date='20180726', fields='ts_code,trade_date,turnover_rate,volume_ratio,pe,pb')
+        df = pro.daily_basic(ts_code=stockcode, start_date= startDay, end_date=endDay)
+        print ("@:Python Info: Getting stock code Kline... index, startDay, endDay", stockcode, startDay, endDay)
+        print ("@:Python Info: df:", df)
+
+        kclose = df['close'].tolist()
+        kclose.reverse()
+        return kclose
+
+
+# turn the number list in to String
+def getIsKline(stockcode, startDay, endDay):
+        k_num = getIsKlineNum(stockcode, startDay, endDay)
+        return ['{:.2f}'.format(x) for x in k_num]
+
+
+
+
+
+
+# ---------------------- Index kline -------------------------
+# 1)Index Kline.
+# 2)daily, eg: '000001.SH', '20181010'
+def getIxKlineNum(index, startDay, endDay):
 	df = pro.index_daily(ts_code=index, start_date= startDay, end_date=endDay)
 	print ("@:Python Info: Getting Kline... index, startDay, endDay", index, startDay, endDay)
 	kclose = df['close'].tolist()
@@ -34,13 +68,13 @@ def getKlineNum(index, startDay, endDay):
 
 
 # turn the number list in to String
-def getKline(index, startDay, endDay):
+def getIxKline(index, startDay, endDay):
 	k_num = getKlineNum(index, startDay, endDay)
 	return ['{:.2f}'.format(x) for x in k_num]
 
 
 
-#-------- Market property ------------------------
+#------------ Market property ------------------------
 """ts_code trade_date total_mv(总市值) float_mv(流通市值）total_share float_share free_share turnover_rate turnover_rate_f pe  pe_ttm  pb
 0   000001.SH * 20190104  3.219598e+13  2.338122e+13  4.500358e+12  ...           0.51             1.32  12.04   11.08  1.25
 1   000005.SH   20190104  1.481860e+12  7.004018e+11  1.738149e+11  ...           1.75             2.52  14.52   13.70  1.34

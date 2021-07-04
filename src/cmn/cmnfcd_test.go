@@ -44,12 +44,14 @@ func TestPullHisKindex(t *testing.T){
 
 
 // pull single code history data
-func TestPullHisKline(t *testing.T){
-	PullHisKline("601995.SH", "20201103", YesterdayStr, dfn.FN_KLINE_SUG1A)        // zhongjin
-	PullHisKline("300059.SZ", "20140503", YesterdayStr, dfn.FN_KLINE_SUG1B)
-	PullHisKline("603986.SH", "20201103", YesterdayStr, dfn.FN_KLINE_SUG2A)        // zhaoyi
-	PullHisKline("002049.SZ", "20201103", YesterdayStr, dfn.FN_KLINE_SUG2B)        // ziguang_guowei
-
+func TestPullHisIs(t *testing.T){
+	startDate := DateStrRmvSlash(dfn.DATE_LAST_BOT2)
+	endDate  :=  DateStrRmvSlash(YesterdayStr)
+	PullHisIs("600109.SH", startDate,  endDate,  dfn.FN_KLINE_SUG1A)        // guo jin
+	PullHisIs("300059.SZ", startDate,  endDate,  dfn.FN_KLINE_SUG1B)        // dong cai
+	PullHisIs("603986.SH", "20170707", endDate,  dfn.FN_KLINE_SUG2A)        // zhao yi
+	PullHisIs("002049.SZ", startDate,  endDate,  dfn.FN_KLINE_SUG2B)        // ziguang_guowei
+	t.Logf("@@ t.Logf: startDate: %v, YesterdayStr: %v \n", startDate, endDate)
 }
 
 
