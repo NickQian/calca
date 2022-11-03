@@ -1,2 +1,4 @@
 # calca
-my calculation tool to play in A stock, inspired by a "股霸"
+my calculation tool to play in A stock. Bases on the "C-W model".
+
+2021.6
