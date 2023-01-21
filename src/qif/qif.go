@@ -84,6 +84,7 @@ func GetIxKline(indexType, dayStart, dayEnd string)(kline []float64){
 }
 
 
+
 // the diff compared to last func is the API of tushare
 func GetIsKline(stockcode, dayStart, dayEnd string)(kline []float64){
         _, I_kline, _ := goCallpy("getIsKline", stockcode, dayStart, dayEnd)
@@ -99,6 +100,8 @@ func GetIsKline(stockcode, dayStart, dayEnd string)(kline []float64){
         return
 }
 
+
+
 // use <GetMarket> to update "Today" info
 func GetCurMarket_raw() (resDic map[string]float64){
 	// find a recent valid trade day
@@ -113,6 +116,7 @@ func GetCurMarket_raw() (resDic map[string]float64){
 	}
 	return
 }
+
 
 
 // Get One day market info, eg. PB, PE, Volr

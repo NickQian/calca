@@ -1,3 +1,44 @@
 This is Interface to JD/Wind/... quantitative API.
+
+---
+Requirements:
+---
+
+//======= golang ======
+
+go1.15.6
+
+//==========  tushare: =================
+pip install lxml
+pip install pandas
+pip install requests
+pip install 'tushare==1.2.54'
+
+
+2023/1/20:  1.2.89.tar.gz
+2020/03/20  1.2.54   增加关键字搜索/ 通用行情接口升级优化/ 增加另类数据
+2018/10/15  1.2.15   增加通用行情pro_bar接口   优化set_token功能
+
+
+//single stock: 
+   * df = pro.daily(ts_code='000001.SZ', start_date='20180701', end_date='20180718')
+
+// index:
+   * 指数日线行情  index_daily    *df = pro.index_daily(ts_code='399300.SZ', start_date='20180101', end_date='20181010')
+   various指数: index_basic   描述：获取指数基础信息
+
+// pe/pb/tnr ...
+   * 指数每日指标   index_dailybasic  上证综指 深证成指 上证50 中证500 中小板指 创业板指
+     single:    daily_basic   df = pro.daily_basic(ts_code='', trade_date='20180726', fields='ts_code,trade_date,turnover_rate,volume_ratio,pe,pb')
+
+
+//? 通用行情接口  接口名称：pro_bar，
+
+
+
+//============== end tushare ============
+----
+
+
    
 2019.1.4

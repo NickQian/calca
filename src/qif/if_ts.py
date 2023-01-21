@@ -4,7 +4,7 @@
 #  ----
 #  License: BSD
 #  ----
-#  0.2: 
+#  0.2:
 #  0.1: init version: TS数据历史：从2004年1月开始提供 - 2020.9 - Nick cKing
 """
 
@@ -25,21 +25,22 @@ def Login_TS(usr, password):
 
 """
 ########################### TS API ########################################
-# Is(Individual staock):   daily()  ->
-#                         *daily_basic() -> details. ttm/pe/vol/tnr
+# Is(Individual staock):   daily(ts_code='000001.SZ', start_date='20180701', end_date='20180718')
+#                         *daily_basic() -> ttm/pe/vol/tnr
+#                        前复权行情: pro_bar(ts_code='000001.SZ', adj='qfq', start_date='20180101', end_date='20181011')
 # Ix(Index):              *index_daily() -> k line. today detail.
-#                         *index_basix() -> pe/vol/tnr etc.             """
+#                         *index_basic() -> pe/vol/tnr etc.             """
 
 
 
 #--------- single stock kline ----------------
 # 1)individual stocks  kline.
-# 2) eg. '20181010'
+# 2) eg. ts_code='000001.SZ', start_date='20180701', end_date='20180718'
 def getIsKlineNum(stockcode, startDay, endDay):
-        #(ts_code='', trade_date='20180726', fields='ts_code,trade_date,turnover_rate,volume_ratio,pe,pb')
-        df = pro.daily_basic(ts_code=stockcode, start_date= startDay, end_date=endDay)
-        print ("@:Python Info: Getting stock code Kline... index, startDay, endDay", stockcode, startDay, endDay)
-        print ("@:Python Info: df:", df)
+
+        df = pro.daily(ts_code=stockcode, start_date= startDay, end_date=endDay)
+        print ("@:Python Info: Getting single stock code Kline... code:%s, startDay:%s, endDay:%s" %(stockcode, startDay, endDay) )
+        #print ("@:Python Info: df:", df)
 
         kclose = df['close'].tolist()
         kclose.reverse()
@@ -61,7 +62,7 @@ def getIsKline(stockcode, startDay, endDay):
 # 2)daily, eg: '000001.SH', '20181010'
 def getIxKlineNum(index, startDay, endDay):
 	df = pro.index_daily(ts_code=index, start_date= startDay, end_date=endDay)
-	print ("@:Python Info: Getting Kline... index, startDay, endDay", index, startDay, endDay)
+	print ("@:Python Info: Getting Index Kline... index:%s, startDay:%s, endDay:%s" %(index, startDay, endDay) )
 	kclose = df['close'].tolist()
 	kclose.reverse()
 	return kclose
@@ -69,7 +70,7 @@ def getIxKlineNum(index, startDay, endDay):
 
 # turn the number list in to String
 def getIxKline(index, startDay, endDay):
-	k_num = getKlineNum(index, startDay, endDay)
+	k_num = getIxKlineNum(index, startDay, endDay)
 	return ['{:.2f}'.format(x) for x in k_num]
 
 
@@ -198,8 +199,14 @@ def getTradeDays(end_date_str, num_prev):
 
 if __name__ ==  "__main__":
 	Login_TS("abc", "ddd")
-	#kline = getKline("000001.SH","20190103", "20190120")
-	#print ("Try to get market.. type_of_element, data:",  type(kline[0]), kline )
+
+        print ("----- Trying to get single stock kline ----------")
+        kline = getIsKline('002142.SZ', '20190103', '20190120')
+        print ("GOt index kline, type_of_element %s, data: %s" %( type(kline[0]), kline ) )
+
+        print ("----- Trying to get Index kline ----------")
+	kline = getIxKline("000001.SH","20190103", "20190120")
+	print ("GOt index kline, type_of_element %s, data: %s" %( type(kline[0]), kline ) )
 
 	print("---testing <getMarketMap>--- \n")
 	print( getMarketMap('20150522') )   #20050607         # 20040105 --> 20190104  now: 20210210
