@@ -29,28 +29,30 @@ func TestPullTodayPos(t *testing.T){
 }
 
 
-// many
-func TestPullTodayKs(t *testing.T){
-	suc := PullTodayKs()
+// today's Klines of indexes(sh/sz/sh300/gem...)
+func TestPullTodayKs_Ix(t *testing.T){
+	suc := PullTodayKs_Ix()
 	t.Logf("<PullTodayKs> result: %v \n", suc)
 }
 
-// pull indexs codes history data
-func TestPullHisKindex(t *testing.T){
-	//_, sh_K := PullHisKline("000001.SH", enddate, dfn.FN_KLINE_SH)
-	_, K := PullHisKindex(YesterdayStr)
-	t.Logf("sh_K: %v ", K)
+// pull indexs 4 codes history data
+func TestPullHisKs_Ix(t *testing.T){
+	//_, K := PullHisKs_Ix(YesterdayStr)
+	_, k_sh, k_sz, k_sh300, k_gem := PullHisKs_Ix("20230118")
+	t.Logf("<TestPullHisKs_Ix> sh_K len: %v, k_sz len: %v, k_sh300 len:%v, k_gem len:%v ", len(k_sh), len(k_sz), len(k_sh300), len(k_gem) )
 }
 
 
 // pull single code history data
-func TestPullHisIs(t *testing.T){
+func TestPullHisK_Is(t *testing.T){
 	startDate := DateStrRmvSlash(dfn.DATE_LAST_BOT2)
 	endDate  :=  DateStrRmvSlash(YesterdayStr)
-	PullHisIs("600109.SH", startDate,  endDate,  dfn.FN_KLINE_SUG1A)        // guo jin
+
 	PullHisIs("300059.SZ", startDate,  endDate,  dfn.FN_KLINE_SUG1B)        // dong cai
-	PullHisIs("603986.SH", "20170707", endDate,  dfn.FN_KLINE_SUG2A)        // zhao yi
-	PullHisIs("002049.SZ", startDate,  endDate,  dfn.FN_KLINE_SUG2B)        // ziguang_guowei
+	//PullHisIs("600109.SH", startDate,  endDate,  dfn.FN_KLINE_SUG1A)        // guo jin
+	//PullHisIs("603986.SH", "20170707", endDate,  dfn.FN_KLINE_SUG2A)        // zhao yi
+	//PullHisIs("002049.SZ", startDate,  endDate,  dfn.FN_KLINE_SUG2B)        // ziguang_guowei
+
 	t.Logf("@@ t.Logf: startDate: %v, YesterdayStr: %v \n", startDate, endDate)
 }
 

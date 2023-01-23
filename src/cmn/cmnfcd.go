@@ -878,8 +878,8 @@ func FetchKline()(){
 
 
 
-//--- Refresh today's Kline -----
-func PullTodayKs()(suc bool){
+//--- Refresh today's indexes Klines -----
+func PullTodayKs_Ix()(suc bool){
 	suc = false
 	PullTodayPos("000001.SH", FN_KLINE_SH)
 	PullTodayPos("399001.SZ", FN_KLINE_SZ)
@@ -890,15 +890,15 @@ func PullTodayKs()(suc bool){
 
 
 //--- History kline store -----
-//pull codes & store into txt
-func PullHisKindex(enddate string)(suc bool, K []float64){
-	suc, K = PullHisIx("000001.SH", DATE_SH_START,      enddate, FN_KLINE_SH    )
-        suc, K = PullHisIx("399001.SZ", DATE_SZ_START,      enddate, FN_KLINE_SZ    )
-        suc, K = PullHisIx("000300.SH", DATE_HS300_START,   enddate, FN_KLINE_SH300 )
-        suc, K = PullHisIx("399006.SZ", DATE_MKT_GEM_START, enddate, FN_KLINE_GEM   )
+//pull a stock indexes klines & store into txt
+func PullHisKs_Ix(enddate string)(suc bool, K_sh,K_sz,K_sh300,K_gem []float64){
+	suc, K_sh    = PullHisIx("000001.SH", DATE_SH_START,      enddate, FN_KLINE_SH    )
+        suc, K_sz    = PullHisIx("399001.SZ", DATE_SZ_START,      enddate, FN_KLINE_SZ    )
+        suc, K_sh300 = PullHisIx("000300.SH", DATE_HS300_START,   enddate, FN_KLINE_SH300 )
+        suc, K_gem   = PullHisIx("399006.SZ", DATE_MKT_GEM_START, enddate, FN_KLINE_GEM   )
         //FN_KLINE_STAR
 
-	return
+	return true, K_sh, K_sz, K_sh300, K_gem
 }
 
 //---------------------------------- sub func -------------------------------------------------
@@ -921,12 +921,14 @@ func PullTodayPos(code, fn string)( []float64){
 // 1)pull history index kline(one kind, according code) from qif and
 // 2)store into txt.
 // date format: 20190104
-func PullHisIx(code string, startdate, enddate string, fn string)(suc bool, sh_K []float64){
+func PullHisIx(code string, startdate, enddate string, fn string)(suc bool, k_float []float64){
 	suc = false
 
-	sh_K = qif.GetIxKline(code, startdate, enddate)     // start: "19910101"
+	k_float = qif.GetIxKline(code, startdate, enddate)     // start: "19910101"
+	//fmt.Printf("<PullHisIx>: kline( []float64 ) got: %v.", k_float)
 	//sh_K_rvs := ReverseSlc(sh_K)                     // reverse the K line
-	Wr_String_(slcFloat2String(sh_K), fn)
+
+	Wr_String_(slcFloat2String(k_float), fn)
 
 	suc = true
 	return
