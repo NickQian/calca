@@ -95,15 +95,15 @@ func EvalPos(eig_min, eig_max[]float64, dicMkt map[string]float64 )(pos float64)
 
 	dm := Eggs2Dm(dicMktS)                                  // dm is [][]float64
 	DmClean(&dm)             				// clean before use
-	fmt.Printf("Info: <EvalCurPos>  dm: %v \n", dm)
+	if DEBUG_MIPOS{ fmt.Printf("Info: <EvalCurPos>  dm: %v \n", dm)  }
 
 	// step 2: Normalize it bases on eig_min, eig_max
 	d_p := Norm_EvtsDm(dm, eig_min, eig_max)           // dm[0] is 1d slice
-	fmt.Printf("Info: <EvalCurPos>  d_p: %v \n", d_p)
+	if DEBUG_MIPOS{ fmt.Printf("Info: <EvalCurPos>  d_p: %v \n", d_p) }
 
 	// step 3: weight it
 	pos_slc := f2_evalEigs(d_p)
-	fmt.Printf("@ : <EvalCurPos>  pos_slc: %v \n", pos_slc)
+	fmt.Printf("Info : <EvalCurPos>  pos_slc: %v \n", pos_slc)
 
 	return pos_slc[0]
 }
@@ -153,7 +153,7 @@ func Chrp( )(crz_slc, hot_slc, puc_slc, rlx_slc []float64, eigMin, eigMax []floa
 
 	// step 1: get min_max
 	min_cha, max_cha := GetMinMax( dm_eigAll )               // (min, max []float64)
-	fmt.Printf("Info: <Chrp>, min_cha: %v, max_cha: %v   \n", min_cha, max_cha)
+	if DEBUG_CHRP { fmt.Printf("Info: <Chrp>, min_cha: %v, max_cha: %v   \n", min_cha, max_cha) }
 
 	// step 2: Normalize crz/hot/puc/rlx
 	DmClean(&dmEigRlx); DmClean(&dmEigPuc); DmClean(&dmEigHot); DmClean(&dmEigCrz)
@@ -162,14 +162,14 @@ func Chrp( )(crz_slc, hot_slc, puc_slc, rlx_slc []float64, eigMin, eigMax []floa
 	dmNormHot := Norm_EvtsDm(dmEigHot, min_cha, max_cha)
 	dmNormPuc := Norm_EvtsDm(dmEigPuc, min_cha, max_cha)
 	dmNormRlx := Norm_EvtsDm(dmEigRlx, min_cha, max_cha)
-	fmt.Printf("Info: <Chrp>, dmNormCrz:%v\n, dmNormHot:%v\n, dmNormPuc:%v\n, dmNormRlx:%v  \n", dmNormCrz, dmNormHot, dmNormPuc, dmNormRlx)
+	if DEBUG_CHRP { fmt.Printf("Info: <Chrp>, dmNormCrz:%v\n, dmNormHot:%v\n, dmNormPuc:%v\n, dmNormRlx:%v  \n", dmNormCrz, dmNormHot, dmNormPuc, dmNormRlx) }
 
 	// setp 3: weight it (each type)
 	crz_slc = f2_evalEigs(dmNormCrz )
 	hot_slc = f2_evalEigs(dmNormHot )
 	puc_slc = f2_evalEigs(dmNormPuc )
 	rlx_slc = f2_evalEigs(dmNormRlx )
-	fmt.Printf("Info: <Chrp:Weighted>: crz_slc:%v, hot_slc:%v, puc_slc:%v, rlx_slc:%v  \n", crz_slc, hot_slc, puc_slc, rlx_slc)
+	if DEBUG_CHRP{ fmt.Printf("Info: <Chrp:Weighted>: crz_slc:%v, hot_slc:%v, puc_slc:%v, rlx_slc:%v  \n", crz_slc, hot_slc, puc_slc, rlx_slc) }
 
 	eigMin = min_cha
 	eigMax = max_cha

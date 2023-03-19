@@ -67,6 +67,13 @@ var PyBrg *T_go2py
 var PyModule *python.PyObject
 
 
+
+//------------------------  usage  -------------------------------------
+//func GetIxAll()()
+
+
+
+
 //------------------------ func实现 ------------------------------------
 func GetIxKline(indexType, dayStart, dayEnd string)(kline []float64){
 	_, I_kline, _ := goCallpy("getIxKline", indexType, dayStart, dayEnd)
@@ -103,6 +110,7 @@ func GetIsKline(stockcode, dayStart, dayEnd string)(kline []float64){
 
 
 // use <GetMarket> to update "Today" info
+// this func get raw data. "cmn" package will <GetCurMarket>
 func GetCurMarket_raw() (resDic map[string]float64){
 	// find a recent valid trade day
 	validDays := GetTradeDays(Today, PRE_SMP_NUM)
@@ -120,6 +128,7 @@ func GetCurMarket_raw() (resDic map[string]float64){
 
 
 // Get One day market info, eg. PB, PE, Volr
+// this func get raw data. "cmn" package will <GetMarket>
 func GetMarket_raw(day string)(dicmkt map[string]float64){
 	dicmkt = make(map[string]float64)
 	dicmkt, _, _ = goCallpy("getMarketMap", day)
@@ -161,8 +170,10 @@ func FilDicToA(dicmkt map[string]float64, a *T_A, tag string)(bool){
 }
 
 
-func GetTradeDays(date string, pre_num int)(days []string){
-	_, I_days, _ := goCallpy("getTradeDays", date, strconv.Itoa(pre_num) )    // string to facilitate <goCallpy>
+
+func GetTradeDays(endDate string, pre_num int)(days []string){
+	if DEBUG_QIF {fmt.Printf("Info: qif.go: <GetTradeDays> pre_num:%v, strconv.Itoa(pre_num): %v \n", pre_num, strconv.Itoa(pre_num) ) }
+	_, I_days, _ := goCallpy("getTradeDays", endDate, strconv.Itoa(pre_num) )    // string to facilitate <goCallpy>
 	//if days, ok := I_days.([]string); ok{
 	if len(I_days) > 0{
 		days = I_days

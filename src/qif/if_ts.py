@@ -24,12 +24,13 @@ def Login_TS(usr, password):
 	return  True, True, True
 
 """
-########################### TS API ########################################
+########################### TS API #################################################
 # Is(Individual staock):   daily(ts_code='000001.SZ', start_date='20180701', end_date='20180718')
+#                          前复权行情: pro_bar(ts_code='000001.SZ', adj='qfq', start_date='20180101', end_date='20181011')
 #                         *daily_basic() -> ttm/pe/vol/tnr
-#                        前复权行情: pro_bar(ts_code='000001.SZ', adj='qfq', start_date='20180101', end_date='20181011')
+#                         ---------------------------------------------------------
 # Ix(Index):              *index_daily() -> k line. today detail.
-#                         *index_basic() -> pe/vol/tnr etc.             """
+#                         *index_basic() -> ttm/pe/vol/tnr etc.                 """
 
 
 
@@ -177,11 +178,11 @@ def getMarket(date):
 # input eg: (2014-06-13, 10)
 def getTradeDays(end_date_str, num_prev):
         validays   = []
-        numpre     = int(num_prev) + 10
-        print("numpre:" ,numpre)
+        numpre     = int(num_prev)   # + 10
         end_Date   = datetime.datetime.strptime(end_date_str, '%Y-%m-%d') #  '%Y-%m-%d')
 	delta = datetime.timedelta(days = numpre -1)
 	start_Date = end_Date - delta
+        print("python Info: <getTradeDays> numpre, start_Date, end_Date:" , numpre, start_Date, end_Date)
 
         days_df = pro.query('trade_cal', start_date=start_Date.strftime('%Y%m%d'), end_date=end_Date.strftime('%Y%m%d'))    # exchange  cal_date  is_open
 	for i in range( numpre):

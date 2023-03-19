@@ -47,8 +47,25 @@ type T_CodeInfo struct{
 }
 
 
+const(
+	DEBUG_QIF   = true
+	DEBUG_MIPOS = false
+	DEBUG_PA    = false
+	DEBUG_PB    = false
+	DEBUG_FLT   = false
+	DEBUG_CHRP  = false          // Crz/Hot/Relax/Puc
+)
+
 
 // last trade operation
+const(
+	BOT_PUC  = "BOT_PUC"
+        BOT_RLX  = "BOT_RLX"
+        TOP_HOT  = "TOP_HOT"
+        TOP_CRZ  = "TOP_CRZ"
+)
+
+
 type T_LastOp struct{
         Date            string
 	Acc             int
@@ -78,8 +95,8 @@ type T_cmc struct{
 	Cmc_hs300  float64 `jason:"Cmc_hs300"`
 	Cmc_szm    float64 `jason:"Cmc_szm"`        // shenzhen main board. big change after 2015.5.20
 	Cmc_smb    float64 `jason:"Cmc_smb"`        // small and medium board
-        Cmc_gem    float64 `jason:"Cmc_gem"`        // Growth Enterprise Market
-        //Cmc_tim    float64 `jason:"Cmc_tim"`      // Technology Innovation Board
+        Cmc_gem    float64 `jason:"Cmc_gem"`        // 创业板Growth Enterprise Market
+        //----Cmc_tim    float64 `jason:"Cmc_tim"`      // Technology Innovation Board--> star
 }
 
 
@@ -91,7 +108,8 @@ type T_pe struct{
         Pe_szm     float64 `jason:"Pe_szm"`           // 深圳主板
         Pe_smb     float64 `jason:"Pe_smb"`           // 
         Pe_gem     float64 `jason:"Pe_gem"`           // 创业板
-        //Pe_tim     float64 `jason:"Pe_tim"`         // 科创板
+        //Pe_star     float64 `jason:"Pe_star"`       // 科创板（The Science and Technology Innovation Board; STAR Market科创板
+
 }
 
 
@@ -130,7 +148,7 @@ type T_volr struct{
 	Volr_total float64 `jason:"Volr_total"`
         Volr_sh    float64 `jason:"Volr_sh"`
         Volr_sz    float64 `jason:"Volr_sz"`
-        Volr_hs300    float64 `jason:"Volr_sz"`
+        Volr_hs300 float64 `jason:"Volr_sz"`
         Volr_gem   float64 `jason:"Volr_gem"`
 }
 
@@ -142,20 +160,20 @@ type T_Market struct{
 }
 
 type T_MktVal struct{
-	pe_total float64
-	pb_total float64
+	pe_total   float64
+	pb_total   float64
 }
 
 type T_TrdEmo struct{
-	volr_total float64                 // vol / cap
+	volr_total float64                       // vol / cap
 	tnr_total  float64
 	mtsr_total float64
 }
 
 type T_PubPly struct{
-	cp   float64                      // credit policy:tighten or relax
-	nbir float64			 // national debt
-	ir     float64                    // interest rate
+	cp         float64                       // credit policy:tighten or relax
+	nbir       float64			 // national debt
+	ir         float64                       // interest rate
 }
 
 
@@ -168,7 +186,7 @@ type T_Mipos struct{
 	Eqpo       float64       // 0: equilibrium position
 	Bi         float64
 	Ti         float64
-	Pos     float64
+	Pos        float64
 	Poslc	 []float64
 	Gnd        float64
 	Vcc        float64
@@ -230,12 +248,12 @@ const(
 
 
 
-const(  DATE_SH_START   = "19910201"
-        DATE_SZ_START   = "20040201"
-        DATE_HS300_START   = "20050510"     //"2005-04-29"
-	DATE_MKT_GEM_START = "20100618"     //"2010-06-18"
-	DATE_MKT_TIM_START = "2019-08-22"
-        DATE_MKT_SMB_START = "2006-02-10"
+const(  DATE_SH_START       = "19910201"
+        DATE_SZ_START       = "20040201"
+        DATE_HS300_START    = "20050510"     //"2005-04-29"
+	DATE_MKT_GEM_START  = "20100618"     //"2010-06-18"
+	DATE_MKT_STAR_START = "2019-08-22"
+        DATE_MKT_SMB_START  = "2006-02-10"
 )
 
 const (
@@ -246,6 +264,10 @@ const (
 
 
 const(  RUN_DIR = "/home/nk/calca/src/" )
+
+
+const ( FN_SCAN_RES        = RUN_DIR + "data/res_scan.json"
+      )
 
 
 const(

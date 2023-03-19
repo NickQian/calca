@@ -45,8 +45,10 @@ var (
         ErrPasswd       = errors.New("ERR: password or user name not correct \n")
         ErrNoDataReturn = errors.New("ERR: no data return from qif \n")
         ErrEmptyNoItem  = errors.New("ERR: slice or map is empty.no item to process \n")
-	ErrPlotFail     = errors.New("ERR: some error happens during plot.") 
+	ErrPlotFail     = errors.New("ERR: some error happens during plot.")
+	ErrUnSupportHaystack = errors.New("ERR: unsupported hay stack.")
 )
+
 
 type T_A_BT struct{
 	PeMap    map[string]float64
@@ -55,6 +57,12 @@ type T_A_BT struct{
 	ParaMap  map[string]float64
 }
 
+type T_MyMsgError struct{
+        Code  int
+        Msg   string
+        Where string
+        Time  time.Time
+}
 
 // inst the Bottom parameters container with 0
 var BotA = &T_A_BT{PeMap   : make(map[string]float64),
@@ -68,6 +76,20 @@ var BotA = &T_A_BT{PeMap   : make(map[string]float64),
 //var  Print Ftp = fmt.Println
 var Print func(a ...interface{}) (n int, err error)  = fmt.Println
 
+
+//----------------------- Err  ---------------------------
+//func CheckErr(err error, funcName string) (errMsg *T_MyMsgError){
+func CheckErr(err error, funcName string) ( ){
+	msg := &T_MyMsgError{ Code: -1,
+                              Msg: "Error: Check Error not nil",
+                              Where: "<" + funcName + ">",
+                              Time: time.Now(),
+                             }
+	if err != nil{
+		fmt.Println("Error: Check Errir not nil:  ", ( *msg  ) )
+	}
+	return
+}
 
 //------------------------------ init ------------------------------------
 // init funcs
@@ -120,6 +142,10 @@ func initLogger()(error){
         Log = log.New(logfile, "", log.Ldate | log.Ltime)
         return err
 }
+
+
+
+
 
 
 //---------------------------- READ --------------------------------------
@@ -580,7 +606,7 @@ func mktRaw2dict(dateTag string, dicRaw map[string]float64)(dicMkt map[string]fl
 	dateTag_ := DateStrAddSlash(dateTag)
         dateSmp, _ := time.ParseInLocation(TIME_LAYOUT_SHORT, dateTag_, time.Local)
 	dicMkt = dicRaw                                   // init dicMkt
-	fmt.Printf("Info: init dicMkt with raw qif data: %v   \n", dicMkt)
+	if DEBUG_QIF{ 	fmt.Printf("Info: init dicMkt with raw qif data: %v   \n", dicMkt)  }
 
 	//--- get pe_sz,pb_sz ...etc
 	if dateSmp.Before(dateSmbStart){                  //2004->2006.2.10.  use qif raw data
@@ -614,8 +640,10 @@ func mktRaw2dict(dateTag string, dicRaw map[string]float64)(dicMkt map[string]fl
 	dicMkt["pe_total"],  dicMkt["pe_sz"]  = pe_total,  pe_sz
 	dicMkt["pb_total"],  dicMkt["pb_sz"]  = pb_total,  pb_sz
 	dicMkt["tnr_total"], dicMkt["tnr_sz"] = tnr_total, tnr_sz
-	fmt.Printf("Info: <mktRaw2dict> cmc_sh: %v,cmc_sz: %v,cmc_szm:%v, cmc_smb:%v, cmc_gem:%v  \n", cmc_sh, cmc_sz, cmc_szm, cmc_smb, cmc_gem )
-	fmt.Printf("Info: <mktRaw2dict> pe_tatal: %v, wei_sh: %v, wei_sz:%v  \n", pe_total, wei_sh,  wei_sz)
+	if DEBUG_MIPOS{
+		fmt.Printf("Info: <mktRaw2dict> cmc_sh: %v,cmc_sz: %v,cmc_szm:%v, cmc_smb:%v, cmc_gem:%v  \n", cmc_sh, cmc_sz, cmc_szm, cmc_smb, cmc_gem )
+		fmt.Printf("Info: <mktRaw2dict> pe_tatal: %v, wei_sh: %v, wei_sz:%v  \n", pe_total, wei_sh,  wei_sz)
+	}
 	return
 }
 
@@ -673,7 +701,9 @@ func Eggs2Dm(eggs map[string](map[string]float64) )(dm_eig [][]float64){
                         r_tnr_total ), r_tnr_sh ), r_tnr_sz ),
                         r_volr_total), r_volr_sh), r_volr_sz),
                         r_mtsr_total), r_mtsr_sh), r_mtsr_sz)
-	fmt.Println("Info:<Eggs2Dm> dm_eig:", dm_eig)
+	if DEBUG_MIPOS{
+		fmt.Println("Info:<Eggs2Dm> dm_eig:", dm_eig)
+	}
 
         return
 }
@@ -864,12 +894,12 @@ func mapToJson(m map[string](map[string]float64) )(jsonBytes []byte, err error){
 }
 
 
-/***************************************************************************
-/*   Get K line (pull from qif. store in file. read from file)
+/*************************************************************************************************
+/*   Get K line (pull from qif. store in file.
 /*
-/***************************************************************************/
+/*************************************************************************************************/
 
-//---------------------- read kline from the file ---------------------------------
+//---------------------- Fill the code, pull and store these kline to files ---------------------------------
 
 func FetchKline()(){
 
@@ -885,26 +915,27 @@ func PullTodayKs_Ix()(suc bool){
 	PullTodayPos("399001.SZ", FN_KLINE_SZ)
 	PullTodayPos("000300.SH", FN_KLINE_SH300)
 	PullTodayPos("399006.SZ", FN_KLINE_GEM)
+	PullTodayPos("000688.SH", FN_KLINE_STAR)
 	return true
 }
 
 
 //--- History kline store -----
 //pull a stock indexes klines & store into txt
-func PullHisKs_Ix(enddate string)(suc bool, K_sh,K_sz,K_sh300,K_gem []float64){
-	suc, K_sh    = PullHisIx("000001.SH", DATE_SH_START,      enddate, FN_KLINE_SH    )
-        suc, K_sz    = PullHisIx("399001.SZ", DATE_SZ_START,      enddate, FN_KLINE_SZ    )
-        suc, K_sh300 = PullHisIx("000300.SH", DATE_HS300_START,   enddate, FN_KLINE_SH300 )
-        suc, K_gem   = PullHisIx("399006.SZ", DATE_MKT_GEM_START, enddate, FN_KLINE_GEM   )
-        //FN_KLINE_STAR
+func PullHisKs_Ix(enddate string)(suc bool, K_sh, K_sz, K_sh300, K_gem, K_star []float64){
+	suc, K_sh    = PullHisIx("000001.SH", DATE_SH_START,       enddate, FN_KLINE_SH    )
+        suc, K_sz    = PullHisIx("399001.SZ", DATE_SZ_START,       enddate, FN_KLINE_SZ    )
+        suc, K_sh300 = PullHisIx("000300.SH", DATE_HS300_START,    enddate, FN_KLINE_SH300 )
+        suc, K_gem   = PullHisIx("399006.SZ", DATE_MKT_GEM_START,  enddate, FN_KLINE_GEM   )
+	suc, K_star  = PullHisIx("000688.SH", DATE_MKT_STAR_START, enddate, FN_KLINE_STAR  )
 
-	return true, K_sh, K_sz, K_sh300, K_gem
+	return true, K_sh, K_sz, K_sh300, K_gem, K_star
 }
 
 //---------------------------------- sub func -------------------------------------------------
-// 1) get one code's today position.
-// 2) can be single code or index
-// 3) append to the k line file
+// 1) get one index today position;
+// 2) append to the k line file;
+// 3) if not valid day, ignore it.
 func PullTodayPos(code, fn string)( []float64){
 
 	todayPos := qif.GetIxKline(code,  DateStrRmvSlash(TodayStr),  DateStrRmvSlash(TodayStr))   //YesterdayStr
@@ -935,7 +966,8 @@ func PullHisIx(code string, startdate, enddate string, fn string)(suc bool, k_fl
 }
 
 
-// Pull individual stock code
+// 1)Pull individual stock history data;
+// 2)compared to Ix, Is only need history data.
 // date format: 20190104
 func PullHisIs(code string, startdate, enddate string, fn string)(suc bool, sh_K []float64){
         suc = false
@@ -1041,3 +1073,25 @@ func slcFloat2String(din []float64)(str string){
 	}
 	return
 }
+
+
+// "is in"
+// needle "is in" haystack
+func Is_in(haystack interface{}, needle interface{}) (bool, error) {
+	sVal := reflect.ValueOf(haystack)
+	kind := sVal.Kind()
+	if kind == reflect.Slice || kind == reflect.Array {
+		for i := 0; i < sVal.Len(); i++ {
+			if sVal.Index(i).Interface() == needle {
+ 				return true, nil
+			}
+ 		}
+
+	return false, nil
+ 	}
+
+	return false, ErrUnSupportHaystack
+}
+
+
+
