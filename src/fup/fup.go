@@ -25,19 +25,20 @@ import (
 // fetch data from qif; update model parameter
 func Fup(allK bool)(suc bool, err error){
 	// get last valid trade day
-	RecentTradeDays := qif.GetTradeDays(cmn.TodayStr, dfn.PRE_SMP_NUM)
-	todayIsValid, err := cmn.Is_in(RecentTradeDays, cmn.TodayStr)
+	RecentTradeDays := qif.GetTradeDays(cmn.TodayStr, dfn.PRE_SMP_NUM)                   // [20230320 20230317 20230316]
+	todayIsValid, err := cmn.Is_in(RecentTradeDays, cmn.DateStrRmvSlash(cmn.TodayStr) )
 
 	// fetch data from qif
 	if todayIsValid{
 		if allK{
 			//suc, K_sh,K_sz,K_sh300,K_gem,K_star := cmn.PullHisKs_Ix(cmn.TodayStr)
-			cmn.PullHisKs_Ix(cmn.TodayStr)
+			//cmn.PullHisKs_Ix(cmn.TodayStr)
+			cmn.PullHisKs_Ix(RecentTradeDays[1])   //second:yesterday info.    last one: len(RecentTradeDays)-1
 		}else{
 			cmn.PullTodayKs_Ix()
 		}
 	}else{
-		fmt.Printf("## Warining:<Fup> today is not valid trade day. today: %v, recent trade days: %v \n", cmn.TodayStr, RecentTradeDays )
+		fmt.Printf("## Warining:<Fup> today is not valid trade day. today: %v, recent trade days: %v \n", cmn.DateStrRmvSlash(cmn.TodayStr), RecentTradeDays )
 	}
 
 	// calculate mipos

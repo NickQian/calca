@@ -172,12 +172,12 @@ func FilDicToA(dicmkt map[string]float64, a *T_A, tag string)(bool){
 
 
 func GetTradeDays(endDate string, pre_num int)(days []string){
-	if DEBUG_QIF {fmt.Printf("Info: qif.go: <GetTradeDays> pre_num:%v, strconv.Itoa(pre_num): %v \n", pre_num, strconv.Itoa(pre_num) ) }
+	if DEBUG_QIF {fmt.Printf("Info: qif-<GetTradeDays> pre_num:%v \n", pre_num  ) }
 	_, I_days, _ := goCallpy("getTradeDays", endDate, strconv.Itoa(pre_num) )    // string to facilitate <goCallpy>
 	//if days, ok := I_days.([]string); ok{
 	if len(I_days) > 0{
 		days = I_days
-	        fmt.Printf("Info: <qif.go> -> <GetTradeDays>: %v  \n", days)
+	        fmt.Printf("Info: qif-<GetTradeDays>: %v  \n", days)
 	}else{
 		fmt.Print(ErrNoDataReturn)
 	}

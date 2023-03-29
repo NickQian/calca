@@ -13,31 +13,16 @@ import (
 	//"encoding/json"
 	//"io"
 	//"io/ioutil"
-	//"strings"
 	//"scans"
         . "cmn"
 	"pa"
+	"pb"
 	. "fup"
 	//"trdsim"
 	. "plotit"
 	. "define"
 )
 
-
-/*func init(){
-
-	//var logger *log.Logger
-    	logfile, err := os.OpenFile("run.log",os.O_APPEND|O_CREATE, 666)
-    	logger := log.New(logfile, "", log.Ldate | log.Ltime)
-
-        // fetch today data once to update A status
-        //if _, e := GetCurPE(); e != nil{
-        //	Log.Fatalln("fatal Err: Qif not get PE data ")
-        //	panic("Error: Qif not get PE data")
-        //}
-
-	return
-}*/
 
 
 //func Calca()(){
@@ -69,7 +54,7 @@ func CalcaToday()(bi, ti int, mix_cw T_Mipos){
         PlotMipos(mix_cw)
 
 	//(3) the filter
-
+	pb.FltK(use_m_file=true)
 
 
 	return
@@ -93,6 +78,21 @@ func Simtrade()(acc int, code [3]string){
 }
 
 
+
+/*func init(){
+
+	//var logger *log.Logger
+    	logfile, err := os.OpenFile("run.log",os.O_APPEND|O_CREATE, 666)
+    	logger := log.New(logfile, "", log.Ldate | log.Ltime)
+
+        // fetch today data once to update A status
+        //if _, e := GetCurPE(); e != nil{
+        //	Log.Fatalln("fatal Err: Qif not get PE data ")
+        //	panic("Error: Qif not get PE data")
+        //}
+
+	return
+}*/
 
 
 

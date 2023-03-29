@@ -402,7 +402,7 @@ func Wr_Byte(Byte []byte, fn string) (err error){
 
 // append write
 func Wr_Byte_(Byte []byte, fn string)(err error){
-	f, err := os.OpenFile(fn, os.O_APPEND|os.O_WRONLY, 0644) //os.O_CREATE
+	f, err := os.OpenFile(fn, os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil{
     		return errors.New("ERROR: Open 文件出错")
     		log.Fatalf("Open 文件出错: %s", err)
@@ -423,7 +423,7 @@ func Wr_Byte_(Byte []byte, fn string)(err error){
 // Append write. Input is string
 func Wr_String_(strWr string, fn string)(err error){
 	//strWr := string(Byte)
-	f, err := os.OpenFile(fn, os.O_APPEND|os.O_WRONLY, 0644)        // , 0666)
+	f, err := os.OpenFile(fn, os.O_APPEND|os.O_WRONLY, 0644)        // , 0666   // if not exit, create file
 	defer f.Close()
 	if err != nil{
 		fmt.Printf("Error: Open file err: %v \n", err)
@@ -437,6 +437,28 @@ func Wr_String_(strWr string, fn string)(err error){
 	}
 	fmt.Printf("Info: Write String success. file: %v \n", fn)
 	return
+}
+
+
+// clear and write. Input is string
+func Wr_String(strWr string, fn string)(err error){
+        //strWr := string(Byte)
+        f, err := os.OpenFile(fn, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0644)        // , 0666)
+        defer f.Close()
+        if err != nil{
+                fmt.Printf("Error: Open file err: %v \n", err)
+                return
+        }
+
+	// move point to head
+	f.Seek(0, 0)
+
+        if _, err = io.WriteString(f, strWr); err != nil{
+                fmt.Printf("Error: Write String to file fail!  %v  \n", err)
+                return
+        }
+        fmt.Printf("Info: Write String success. file: %v \n", fn)
+        return
 }
 
 //----------- Event write --------
@@ -959,7 +981,7 @@ func PullHisIx(code string, startdate, enddate string, fn string)(suc bool, k_fl
 	//fmt.Printf("<PullHisIx>: kline( []float64 ) got: %v.", k_float)
 	//sh_K_rvs := ReverseSlc(sh_K)                     // reverse the K line
 
-	Wr_String_(slcFloat2String(k_float), fn)
+	Wr_String(slcFloat2String(k_float), fn)     // clear and write
 
 	suc = true
 	return
@@ -974,7 +996,7 @@ func PullHisIs(code string, startdate, enddate string, fn string)(suc bool, sh_K
 
         sh_K = qif.GetIsKline(code, startdate, enddate)     // start: "19910101"
         //sh_K_rvs := ReverseSlc(sh_K)                     // reverse the K line
-        Wr_String_(slcFloat2String(sh_K), fn)
+        Wr_String(slcFloat2String(sh_K), fn)
 
         suc = true
         return
